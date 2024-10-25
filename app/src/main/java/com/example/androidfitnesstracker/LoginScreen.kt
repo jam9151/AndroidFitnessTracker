@@ -20,8 +20,10 @@ import com.example.androidfitnesstracker.ui.theme.AndroidFitnessTrackerTheme
 @Composable
 fun AuthScreen(
     authManager: AuthManager, // Pass the auth manager as a parameter
-    onAuthClick: (String, String, String?, Boolean) -> Unit,
+    onLogin: (String, String) -> Unit,
+    onSignUp: (String, String, String) -> Unit
 ) {
+
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -111,7 +113,7 @@ fun AuthScreen(
                     if (isSignup) confirmPasswordFocusRequester.requestFocus()
                 },
                 onDone = {
-                    onAuthClick(username, password, email, isSignup)
+                    onSignUp(username, password, email)
                 }
             )
         )
@@ -144,7 +146,7 @@ fun AuthScreen(
                         } else if (!authManager.doPasswordsMatch(password, confirmPassword)) {
                             errorMessage = "Passwords do not match"
                         } else {
-                            onAuthClick(username, password, email, true)
+                            onSignUp(username, password, email)
                         }
                     }
                 )
@@ -161,10 +163,10 @@ fun AuthScreen(
                     } else if (!authManager.doPasswordsMatch(password, confirmPassword)) {
                         errorMessage = "Passwords do not match"
                     } else {
-                        onAuthClick(username, password, email, true)
+                        onSignUp(username, password, email)
                     }
                 } else {
-                    onAuthClick(username, password, null, false)
+                    onLogin(username, password)
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -188,13 +190,14 @@ fun AuthScreen(
     }
 }
 
+/*
 @Preview(showBackground = true)
 @Composable
 fun AuthScreenPreview() {
     AndroidFitnessTrackerTheme {
         AuthScreen(AuthManager()) { _, _, _, _ -> }
     }
-}
+}*/
 
 
 

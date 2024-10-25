@@ -2,7 +2,7 @@ package com.example.androidfitnesstracker
 
 import android.util.Patterns
 
-class AuthManager {
+class AuthManager(private val dbHelper: UserDatabaseHelper) {
 
     // Validate email
     fun isEmailValid(email: String): Boolean {
@@ -16,13 +16,31 @@ class AuthManager {
 
     // Simulated login method (you can later hook this up to a local database)
     fun login(username: String, password: String): Boolean {
-        // Add your login logic here (e.g., check against stored credentials)
-        return true // Simulate a successful login for now
+        return dbHelper.checkUser(username, password)
     }
 
     // Simulated signup method (for local storage)
     fun signup(username: String, password: String, email: String): Boolean {
-        // Add your signup logic here (e.g., store the user's credentials locally)
-        return true // Simulate a successful signup
+        val success = dbHelper.addUser(username, password)
+        return success != -1L
+    }
+
+    fun getEmail(username: String): String? {
+        val db = dbHelper.readableDatabase
+
+        //fetch email based on username
+        val cursor = db.rawQuery(
+            "SELECT email FROM users WHERE username = ?",
+            arrayOf(username)
+        )
+
+        var email: String? = null
+        if (cursor.moveToFirst()) {
+            email = cursor.getString(cursor.getColumnIndexOrThrow("email"))
+        }
+
+        cursor.close()
+        return email  // returns email if found, otherwise null
     }
 }
+
