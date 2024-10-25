@@ -5,24 +5,38 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.androidfitnesstracker.ui.theme.AndroidFitnessTrackerTheme
 
 class MainActivity : ComponentActivity() {
+    private val authManager = AuthManager() // Initialize the auth manager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             AndroidFitnessTrackerTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
+                Scaffold(modifier = Modifier.fillMaxSize()) {
+                    AuthScreen(
+                        authManager = authManager,  // Pass authManager to the screen
+                        onAuthClick = { username, password, email, isSignup ->
+                            if (isSignup) {
+                                // Handle signup logic
+                                if (email != null && authManager.signup(username, password, email)) {
+                                    // Signup success (e.g., navigate to another screen or show a success message)
+                                } else {
+                                    // Signup failed (e.g., show an error message)
+                                }
+                            } else {
+                                // Handle login logic
+                                if (authManager.login(username, password)) {
+                                    // Login success (e.g., navigate to another screen or show a success message)
+                                } else {
+                                    // Login failed (e.g., show an error message)
+                                }
+                            }
+                        }
                     )
                 }
             }
@@ -30,18 +44,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name! Your modifier is $Modifier",
-        modifier = modifier
-    )
-}
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    AndroidFitnessTrackerTheme {
-        Greeting("Android")
-    }
-}
+
+
