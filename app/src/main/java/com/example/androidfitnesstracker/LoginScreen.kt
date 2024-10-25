@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -18,7 +19,8 @@ import com.example.androidfitnesstracker.ui.theme.AndroidFitnessTrackerTheme
 
 @Composable
 fun AuthScreen(
-    onAuthClick: (String, String, String?, Boolean) -> Unit, // Added email, isSignup flag
+    authManager: AuthManager, // Pass the auth manager as a parameter
+    onAuthClick: (String, String, String?, Boolean) -> Unit,
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -26,7 +28,8 @@ fun AuthScreen(
     var email by remember { mutableStateOf("") }
     var isSignup by remember { mutableStateOf(false) }
 
-    // FocusRequesters for each input field
+    var errorMessage by remember { mutableStateOf<String?>(null) } // Hold error messages
+
     val emailFocusRequester = FocusRequester()
     val passwordFocusRequester = FocusRequester()
     val confirmPasswordFocusRequester = FocusRequester()
@@ -38,11 +41,9 @@ fun AuthScreen(
         verticalArrangement = Arrangement.Center
     ) {
         if (isSignup) {
-            // Email input for signup
             BasicTextField(
                 value = email,
                 onValueChange = {
-                    // Filter out spaces, tabs, and newlines
                     email = it.replace(Regex("\\s"), "")
                 },
                 modifier = Modifier
@@ -58,18 +59,16 @@ fun AuthScreen(
                 },
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
                 keyboardActions = KeyboardActions(onNext = {
-                    passwordFocusRequester.requestFocus()  // Move focus to password
+                    passwordFocusRequester.requestFocus()
                 })
             )
 
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Username input
         BasicTextField(
             value = username,
             onValueChange = {
-                // Filter out spaces, tabs, and newlines
                 username = it.replace(Regex("\\s"), "")
             },
             modifier = Modifier.fillMaxWidth(),
@@ -83,17 +82,15 @@ fun AuthScreen(
             },
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = {
-                passwordFocusRequester.requestFocus()  // Move focus to password
+                passwordFocusRequester.requestFocus()
             })
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Password input
         BasicTextField(
             value = password,
             onValueChange = {
-                // Filter out spaces, tabs, and newlines
                 password = it.replace(Regex("\\s"), "")
             },
             modifier = Modifier
@@ -111,7 +108,7 @@ fun AuthScreen(
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = if (isSignup) ImeAction.Next else ImeAction.Done),
             keyboardActions = KeyboardActions(
                 onNext = {
-                    if (isSignup) confirmPasswordFocusRequester.requestFocus()  // Move focus to confirm password in signup mode
+                    if (isSignup) confirmPasswordFocusRequester.requestFocus()
                 },
                 onDone = {
                     onAuthClick(username, password, email, isSignup)
@@ -122,11 +119,9 @@ fun AuthScreen(
         if (isSignup) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Confirm Password input for signup
             BasicTextField(
                 value = confirmPassword,
                 onValueChange = {
-                    // Filter out spaces, tabs, and newlines
                     confirmPassword = it.replace(Regex("\\s"), "")
                 },
                 modifier = Modifier
@@ -144,7 +139,13 @@ fun AuthScreen(
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(
                     onDone = {
-                        onAuthClick(username, password, email, true)
+                        if (!authManager.isEmailValid(email)) {
+                            errorMessage = "Invalid email format"
+                        } else if (!authManager.doPasswordsMatch(password, confirmPassword)) {
+                            errorMessage = "Passwords do not match"
+                        } else {
+                            onAuthClick(username, password, email, true)
+                        }
                     }
                 )
             )
@@ -152,11 +153,16 @@ fun AuthScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Auth button (Login/Signup)
         Button(
             onClick = {
                 if (isSignup) {
-                    onAuthClick(username, password, email, true)
+                    if (!authManager.isEmailValid(email)) {
+                        errorMessage = "Invalid email format"
+                    } else if (!authManager.doPasswordsMatch(password, confirmPassword)) {
+                        errorMessage = "Passwords do not match"
+                    } else {
+                        onAuthClick(username, password, email, true)
+                    }
                 } else {
                     onAuthClick(username, password, null, false)
                 }
@@ -168,12 +174,16 @@ fun AuthScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Switch between login and signup
         Button(
             onClick = { isSignup = !isSignup },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(text = if (isSignup) "Already have an account? Login" else "Don't have an account? Sign Up")
+        }
+
+        errorMessage?.let {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(text = it, color = androidx.compose.ui.graphics.Color.Red)
         }
     }
 }
@@ -182,8 +192,9 @@ fun AuthScreen(
 @Composable
 fun AuthScreenPreview() {
     AndroidFitnessTrackerTheme {
-        AuthScreen { _, _, _, _ -> }
+        AuthScreen(AuthManager()) { _, _, _, _ -> }
     }
 }
+
 
 
