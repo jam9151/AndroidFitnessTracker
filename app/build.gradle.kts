@@ -71,8 +71,11 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
 
+
     //Added, Specify where they are being imported and what they do.
-    implementation(libs.androidx.security.crypto.ktx)
+    implementation(libs.androidx.security.crypto.ktx)   //allows secure user login
+    implementation(libs.androidx.navigation.compose)    //one MainActivity page and several smaller lightweight pages
+
 
 
 
