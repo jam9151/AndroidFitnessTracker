@@ -4,6 +4,13 @@ import android.util.Patterns
 import java.security.MessageDigest
 
 
+enum class SignUpResult {
+    SUCCESS,
+    USERNAME_TAKEN,
+    EMAIL_TAKEN,
+    FAILURE
+}
+
 class AuthManager(private val dbHelper: UserDatabaseHelper) {
 
     private fun hashPassword(password: String): String {
@@ -27,29 +34,27 @@ class AuthManager(private val dbHelper: UserDatabaseHelper) {
         return dbHelper.checkUser(username, hashedPassword)
     }
 
-    // Simulated signup method (for local storage)
-    fun signup(username: String, password: String, email: String): Boolean {
+    //signup method for local storage
+    fun signup(username: String, password: String, email: String): SignUpResult {
+        if (dbHelper.isUsernameTaken(username))
+        {
+            return SignUpResult.USERNAME_TAKEN
+        } else if (dbHelper.isEmailTaken(email))
+        {
+            return SignUpResult.EMAIL_TAKEN
+        }
+
         val hashedPassword = hashPassword(password)
-        val success = dbHelper.addUser(username, hashedPassword)
-        return success != -1L
+        val success = dbHelper.addUser(username, hashedPassword, email)
+        return if (success != -1L) {
+            SignUpResult.SUCCESS
+        } else {
+            SignUpResult.FAILURE
+        }
     }
 
     fun getEmail(username: String): String? {
-        val db = dbHelper.readableDatabase
-
-        //fetch email based on username
-        val cursor = db.rawQuery(
-            "SELECT email FROM users WHERE username = ?",
-            arrayOf(username)
-        )
-
-        var email: String? = null
-        if (cursor.moveToFirst()) {
-            email = cursor.getString(cursor.getColumnIndexOrThrow("email"))
-        }
-
-        cursor.close()
-        return email  // returns email if found, otherwise null
+        return dbHelper.getEmailByUsername(username)
     }
 
 

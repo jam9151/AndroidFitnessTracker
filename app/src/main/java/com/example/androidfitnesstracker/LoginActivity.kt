@@ -59,7 +59,8 @@ class LoginActivity : ComponentActivity() {
                                 }
                             },
                             onSignUp = { username, password, email ->
-                                if (authManager.signup(username, password, email)) {
+                                val result = authManager.signup(username, password, email)
+                                if (result == SignUpResult.SUCCESS) {
 
                                     //on successful signup, save session and navigate to main page
                                     sessionManager.loginUser(username)
