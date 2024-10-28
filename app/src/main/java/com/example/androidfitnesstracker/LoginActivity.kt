@@ -22,6 +22,7 @@ class LoginActivity : ComponentActivity() {
     private lateinit var authManager: AuthManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        println("LoginActivity launched")
         super.onCreate(savedInstanceState)
 
         val dbHelper = UserDatabaseHelper.getInstance(this)
@@ -32,6 +33,8 @@ class LoginActivity : ComponentActivity() {
 
         // Check if the user is logged in
         if (sessionManager.isLoggedIn()) {
+            println("isLoggedIn: ${sessionManager.isLoggedIn()}")
+
             // User is already logged in, navigate to MainActivity
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
@@ -52,8 +55,9 @@ class LoginActivity : ComponentActivity() {
                                 if (authManager.login(username, password)) {
 
                                     //on successful login, save session and navigate to main page
-                                    sessionManager.loginUser(username)
-                                    navigateToMainActivity()
+                                    if (sessionManager.loginUser(username)) {
+                                        navigateToMainActivity()
+                                    }
                                 } else {
                                     // Handle login failure
                                 }
@@ -63,8 +67,9 @@ class LoginActivity : ComponentActivity() {
                                 if (result == SignUpResult.SUCCESS) {
 
                                     //on successful signup, save session and navigate to main page
-                                    sessionManager.loginUser(username)
-                                    navigateToMainActivity()
+                                    if (sessionManager.loginUser(username)) {
+                                        navigateToMainActivity()
+                                    }
                                 } else {
                                     //on unsuccessful signup
                                 }

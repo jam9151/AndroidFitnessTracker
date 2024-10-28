@@ -19,6 +19,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Create an instance of UserActivityManager and get the current user ID
+        val userActivityManager = UserActivityManager(UserDatabaseHelper.getInstance(this))
+        val sessionManager = UserSessionManager(this)
+
         enableEdgeToEdge()
         setContent {
             AndroidFitnessTrackerTheme {
@@ -26,7 +30,13 @@ class MainActivity : ComponentActivity() {
 
                 // Set up the NavHost with routes
                 NavHost(navController = navController, startDestination = "mainPage") {
-                    composable("mainPage") { MainPage(navController) }
+                    composable("mainPage") {
+                        MainPage(
+                            navController = navController,
+                            userActivityManager = userActivityManager,
+                            sessionManager = sessionManager
+                        )
+                    }
                     composable("workoutPage") { WorkoutPage(navController) }
                     composable("statsPage") { StatsPage(navController) }
                 }

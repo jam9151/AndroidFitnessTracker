@@ -10,7 +10,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     companion object {
         //main user table
         private const val DATABASE_NAME = "User.db"
-        private const val DATABASE_VERSION = 3
+        private const val DATABASE_VERSION = 4
         private const val TABLE_USERS = "users"
         private const val COLUMN_ID = "id"
         private const val COLUMN_USERNAME = "username"
@@ -148,5 +148,11 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         return summary
     }
 
-
+    fun getUserIdByUsername(username: String): Int? {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT id FROM users WHERE username = ?", arrayOf(username))
+        val userId = if (cursor.moveToFirst()) cursor.getInt(cursor.getColumnIndexOrThrow("id")) else null
+        cursor.close()
+        return userId
+    }
 }
