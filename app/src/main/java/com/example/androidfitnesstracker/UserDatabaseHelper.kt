@@ -9,11 +9,12 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
 
     companion object {
         private const val DATABASE_NAME = "User.db"
-        private const val DATABASE_VERSION = 1
+        private const val DATABASE_VERSION = 2
         private const val TABLE_USERS = "users"
         private const val COLUMN_ID = "id"
         private const val COLUMN_USERNAME = "username"
         private const val COLUMN_PASSWORD = "password"
+        private const val COLUMN_EMAIL = "email"
 
 
         //Create a Singleton so SQL doesn't get confused
@@ -31,7 +32,8 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         val createTable = "CREATE TABLE $TABLE_USERS (" +
                 "$COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "$COLUMN_USERNAME TEXT," +
-                "$COLUMN_PASSWORD TEXT)"
+                "$COLUMN_PASSWORD TEXT," +
+                "$COLUMN_EMAIL TEXT)"
         db.execSQL(createTable)
     }
 
@@ -42,11 +44,12 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         //you have to modify this function when you upgrade the database
     }
 
-    fun addUser(username: String, password: String): Long {
+    fun addUser(username: String, password: String, email: String): Long {
         val db = writableDatabase
         val values = ContentValues().apply {
             put(COLUMN_USERNAME, username)
             put(COLUMN_PASSWORD, password)
+            put(COLUMN_EMAIL, email)
         }
         return db.insert(TABLE_USERS, null, values)
     }
@@ -59,4 +62,30 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         cursor.close()
         return exists
     }
+
+    fun isUsernameTaken(username: String): Boolean {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT * FROM $TABLE_USERS WHERE $COLUMN_USERNAME = ?", arrayOf(username))
+        val exists = cursor.count > 0
+        cursor.close()
+        return exists
+    }
+
+    fun isEmailTaken(email: String): Boolean {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT * FROM $TABLE_USERS WHERE $COLUMN_EMAIL = ?", arrayOf(email))
+        val exists = cursor.count > 0
+        cursor.close()
+        return exists
+    }
+
+    fun getEmailByUsername(username: String): String? {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT $COLUMN_EMAIL FROM $TABLE_USERS WHERE $COLUMN_USERNAME = ?", arrayOf(username))
+
+        val email = if (cursor.moveToFirst()) cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_EMAIL)) else null
+        cursor.close()
+        return email  // Returns the email if found, otherwise null
+    }
+
 }

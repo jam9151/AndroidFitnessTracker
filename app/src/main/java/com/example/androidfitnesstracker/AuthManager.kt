@@ -2,6 +2,13 @@ package com.example.androidfitnesstracker
 
 import android.util.Patterns
 
+enum class SignUpResult {
+    SUCCESS,
+    USERNAME_TAKEN,
+    EMAIL_TAKEN,
+    FAILURE
+}
+
 class AuthManager(private val dbHelper: UserDatabaseHelper) {
 
     // Validate email
@@ -20,27 +27,25 @@ class AuthManager(private val dbHelper: UserDatabaseHelper) {
     }
 
     // Simulated signup method (for local storage)
-    fun signup(username: String, password: String, email: String): Boolean {
-        val success = dbHelper.addUser(username, password)
-        return success != -1L
+    fun signup(username: String, password: String, email: String): SignUpResult {
+        if (dbHelper.isUsernameTaken(username))
+        {
+            return SignUpResult.USERNAME_TAKEN
+        } else if (dbHelper.isEmailTaken(email))
+        {
+            return SignUpResult.EMAIL_TAKEN
+        }
+
+        val success = dbHelper.addUser(username, password, email)
+        return if (success != -1L) {
+            SignUpResult.SUCCESS
+        } else {
+            SignUpResult.FAILURE
+        }
     }
 
     fun getEmail(username: String): String? {
-        val db = dbHelper.readableDatabase
-
-        //fetch email based on username
-        val cursor = db.rawQuery(
-            "SELECT email FROM users WHERE username = ?",
-            arrayOf(username)
-        )
-
-        var email: String? = null
-        if (cursor.moveToFirst()) {
-            email = cursor.getString(cursor.getColumnIndexOrThrow("email"))
-        }
-
-        cursor.close()
-        return email  // returns email if found, otherwise null
+        return dbHelper.getEmailByUsername(username)
     }
 }
 
