@@ -30,7 +30,7 @@ fun AuthScreen(
     var email by remember { mutableStateOf("") }
     var isSignup by remember { mutableStateOf(false) }
 
-    var errorMessage by remember { mutableStateOf<String?>(null) } // Hold error messages
+    var errorMessage by remember { mutableStateOf<String?>(null) } // Updated to hold error messages
 
     val emailFocusRequester = FocusRequester()
     val passwordFocusRequester = FocusRequester()
@@ -166,7 +166,13 @@ fun AuthScreen(
                         onSignUp(username, password, email)
                     }
                 } else {
-                    onLogin(username, password)
+                    // Attempt login and display error message if login fails
+                    if (!authManager.login(username, password)) {
+                        errorMessage = "Username or password not correct"
+                    } else {
+                        onLogin(username, password)
+                        errorMessage = null // Clear error if login is successful
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -189,15 +195,3 @@ fun AuthScreen(
         }
     }
 }
-
-/*
-@Preview(showBackground = true)
-@Composable
-fun AuthScreenPreview() {
-    AndroidFitnessTrackerTheme {
-        AuthScreen(AuthManager()) { _, _, _, _ -> }
-    }
-}*/
-
-
-

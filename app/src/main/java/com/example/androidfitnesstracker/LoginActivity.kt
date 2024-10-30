@@ -65,8 +65,6 @@ class LoginActivity : ComponentActivity() {
                                     //on successful signup, save session and navigate to main page
                                     sessionManager.loginUser(username)
                                     navigateToMainActivity()
-                                } else {
-                                    //on unsuccessful signup
                                 }
                             }
                         )
