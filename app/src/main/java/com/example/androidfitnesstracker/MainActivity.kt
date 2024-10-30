@@ -1,65 +1,50 @@
 package com.example.androidfitnesstracker
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Button
+import androidx.compose.ui.Modifier
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.composable
 import com.example.androidfitnesstracker.ui.theme.AndroidFitnessTrackerTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        enableEdgeToEdge()
+        // Create an instance of UserActivityManager and get the current user ID
+        val userActivityManager = UserActivityManager(UserDatabaseHelper.getInstance(this))
         val sessionManager = UserSessionManager(this)
-        val username = sessionManager.getUsername()
 
-        // Here you handle the core features of the app
+        enableEdgeToEdge()
         setContent {
             AndroidFitnessTrackerTheme {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(text = "Welcome to the Main Page, $username!")
+                val navController = rememberNavController()
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Log Out Button
-                    Button(
-                        onClick = {
-                            // Log the user out
-                            sessionManager.logoutUser()
-
-                            // Navigate back to the login screen
-                            val intent = Intent(this@MainActivity, LoginActivity::class.java)
-                            startActivity(intent)
-                            finish()  // Close MainActivity so user can't go back
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(text = "Log Out")
+                // Set up the NavHost with routes
+                NavHost(navController = navController, startDestination = "mainPage") {
+                    composable("mainPage") {
+                        MainPage(
+                            navController = navController,
+                            userActivityManager = userActivityManager,
+                            sessionManager = sessionManager
+                        )
                     }
+                    composable("workoutPage") { WorkoutPage(navController) }
+                    composable("statsPage") { StatsPage(navController) }
                 }
             }
         }
     }
 }
+
 
 
 
