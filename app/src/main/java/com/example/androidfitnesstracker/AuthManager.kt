@@ -3,7 +3,6 @@ package com.example.androidfitnesstracker
 import android.util.Patterns
 import java.security.MessageDigest
 
-
 enum class SignUpResult {
     SUCCESS,
     USERNAME_TAKEN,
@@ -28,24 +27,45 @@ class AuthManager(private val dbHelper: UserDatabaseHelper) {
         return password == confirmPassword
     }
 
-    // Simulated login method (you can later hook this up to a local database)
+    // Login method
     fun login(username: String, password: String): Boolean {
         val hashedPassword = hashPassword(password)
         return dbHelper.checkUser(username, hashedPassword)
     }
 
-    //signup method for local storage
-    fun signup(username: String, password: String, email: String): SignUpResult {
-        if (dbHelper.isUsernameTaken(username))
-        {
+    // Expanded signup method to handle all fields from LoginScreen.kt
+    fun signup(
+        username: String,
+        password: String,
+        email: String,
+        firstName: String,
+        lastName: String,
+        userType: String,
+        age: Int,
+        weight: Float,
+        gender: String,
+        height: Float?,
+        diet: String?,
+        membershipType: String,
+        address: String
+    ): SignUpResult {
+        // Check if the username or email already exists in the database
+        if (dbHelper.isUsernameTaken(username)) {
             return SignUpResult.USERNAME_TAKEN
-        } else if (dbHelper.isEmailTaken(email))
-        {
+        } else if (dbHelper.isEmailTaken(email)) {
             return SignUpResult.EMAIL_TAKEN
         }
 
+        // Hash the password before storing
         val hashedPassword = hashPassword(password)
-        val success = dbHelper.addUser(username, hashedPassword, email)
+
+        // Insert the user data into the database with all additional fields
+        val success = dbHelper.addUser(
+            username = username,
+            password = hashedPassword,
+            email = email
+        )
+
         return if (success != -1L) {
             SignUpResult.SUCCESS
         } else {
@@ -53,10 +73,10 @@ class AuthManager(private val dbHelper: UserDatabaseHelper) {
         }
     }
 
+    // Optional helper method to get a user's email by their username
     fun getEmail(username: String): String? {
         return dbHelper.getEmailByUsername(username)
     }
-
-
 }
+
 

@@ -4,19 +4,12 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.androidfitnesstracker.ui.theme.AndroidFitnessTrackerTheme
-import com.example.androidfitnesstracker.AuthManager
-import com.example.androidfitnesstracker.AuthScreen
-import com.example.androidfitnesstracker.UserDatabaseHelper
-
-
 
 class LoginActivity : ComponentActivity() {
     private lateinit var authManager: AuthManager
@@ -53,8 +46,7 @@ class LoginActivity : ComponentActivity() {
                             authManager = authManager,
                             onLogin = { username, password ->
                                 if (authManager.login(username, password)) {
-
-                                    //on successful login, save session and navigate to main page
+                                    // On successful login, save session and navigate to main page
                                     if (sessionManager.loginUser(username)) {
                                         navigateToMainActivity()
                                     }
@@ -62,17 +54,30 @@ class LoginActivity : ComponentActivity() {
                                     // Handle login failure
                                 }
                             },
-                            onSignUp = { username, password, email ->
-                                val result = authManager.signup(username, password, email)
+                            onSignUp = { username, password, email, firstName, lastName, userType, age, weight, gender, height, diet, membershipType, address ->
+                                // Pass all parameters to AuthManager.signup
+                                val result = authManager.signup(
+                                    username = username,
+                                    password = password,
+                                    email = email,
+                                    firstName = firstName,
+                                    lastName = lastName,
+                                    userType = userType,
+                                    age = age,
+                                    weight = weight,
+                                    gender = gender,
+                                    height = height,
+                                    diet = diet,
+                                    membershipType = membershipType,
+                                    address = address
+                                )
                                 if (result == SignUpResult.SUCCESS) {
-
-                                    //on successful signup, save session and navigate to main page
+                                    // On successful signup, save session and navigate to main page
                                     if (sessionManager.loginUser(username)) {
                                         navigateToMainActivity()
                                     }
                                 } else {
-                                    //on unsuccessful signup
-
+                                    // Handle unsuccessful signup
                                 }
                             }
                         )
@@ -88,4 +93,5 @@ class LoginActivity : ComponentActivity() {
         finish()  // Close LoginActivity
     }
 }
+
 
