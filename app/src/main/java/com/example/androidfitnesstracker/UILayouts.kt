@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -14,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 
 @Composable
 fun EncapsulatedSection(
@@ -26,7 +28,6 @@ fun EncapsulatedSection(
         modifier = modifier
             .fillMaxWidth()
             .height(170.dp)                   // Fixed height for uniformity
-            .padding(vertical = 5.dp)
             .clip(RoundedCornerShape(12.dp))   // Rounded corners
             .background(Color(0xFFB0B0B0))     // Light grey background
             .clickable { onClick() }
@@ -82,5 +83,77 @@ fun SectionTitle(
     )
 }
 
+
+@Composable
+fun SquareEncapsulatedSection(
+    title: String,
+    onClick: () -> Unit = {},
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .aspectRatio(1f)                   // Ensures it's square
+            .clip(RoundedCornerShape(12.dp))   // Rounded corners
+            .background(Color(0xFFB0B0B0))     // Light grey background
+            .clickable { onClick() }
+            .padding(16.dp)                    // Internal padding
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.Start
+        ) {
+            Text(
+                text = title,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.Start)
+            )
+            Spacer(modifier = Modifier.height(8.dp)) // Space between title and content
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                content()  // Placeholder for custom content
+            }
+        }
+    }
+}
+
+
+@Composable
+fun DualEncapsulatedSection(
+    leftSection: @Composable () -> Unit,
+    rightSection: @Composable () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 0.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Box(
+            modifier = Modifier.weight(1f)
+        ) {
+            leftSection()  // Left section content
+        }
+        Box(
+            modifier = Modifier.weight(1f)
+        ) {
+            rightSection() // Right section content
+        }
+    }
+}
+
+
+
+@Composable
+fun GoBackButton(navController: NavController, modifier: Modifier = Modifier) {
+    Button(
+        onClick = { navController.popBackStack() },
+        modifier = modifier
+    ) {
+        Text("Go Back")
+    }
+}
 
 

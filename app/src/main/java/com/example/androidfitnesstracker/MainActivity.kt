@@ -22,6 +22,7 @@ class MainActivity : ComponentActivity() {
         // Create an instance of UserActivityManager and get the current user ID
         val userActivityManager = UserActivityManager(UserDatabaseHelper.getInstance(this))
         val sessionManager = UserSessionManager(this)
+        val dbHelper = UserDatabaseHelper.getInstance(this)
 
         enableEdgeToEdge()
         setContent {
@@ -34,11 +35,14 @@ class MainActivity : ComponentActivity() {
                         MainPage(
                             navController = navController,
                             userActivityManager = userActivityManager,
-                            sessionManager = sessionManager
+                            sessionManager = sessionManager,
+                            dbHelper = dbHelper
                         )
                     }
                     composable("workoutPage") { WorkoutPage(navController) }
                     composable("statsPage") { StatsPage(navController) }
+                    composable("mySubscription") { MySubscriptionPage(navController) }
+                    composable("mealPlan") { MealPlanPage(navController) }
                 }
             }
         }
