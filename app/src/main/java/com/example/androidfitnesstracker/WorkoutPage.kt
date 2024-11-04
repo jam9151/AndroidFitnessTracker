@@ -1,5 +1,7 @@
 package com.example.androidfitnesstracker
 
+import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -81,6 +84,7 @@ fun WorkoutItem(
     workout: Workout,
     onClick: () -> Unit
 ) {
+    Log.d("WorkoutItem", "Displaying workout: ${workout.name}, coverImageResId: ${workout.coverImage}")
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -92,13 +96,13 @@ fun WorkoutItem(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Cover Image
-            AsyncImage(
-                model = workout.coverImage,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(64.dp)
-                    .clip(RoundedCornerShape(8.dp))
+            // Check coverImageResId, assign to placeholder if invalid
+            val imageResId = workout.coverImage?.takeIf { it != 0 } ?: R.drawable.placeholder
+
+            Image(
+                painter = painterResource(id = imageResId),
+                contentDescription = workout.name,
+                modifier = Modifier.size(100.dp)
             )
 
             Spacer(modifier = Modifier.width(16.dp))
