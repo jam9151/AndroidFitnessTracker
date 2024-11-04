@@ -43,6 +43,7 @@ class MainActivity : ComponentActivity() {
                     composable("statsPage") { StatsPage(navController) }
                     composable("mySubscription") { MySubscriptionPage(navController) }
                     composable("mealPlan") { MealPlanPage(navController) }
+                    composable("leaderboardPage") { LeaderboardPage(navController) }
                 }
             }
         }

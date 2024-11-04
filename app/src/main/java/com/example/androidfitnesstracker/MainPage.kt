@@ -256,6 +256,28 @@ fun MainPage(
             }
 
             item {
+                EncapsulatedSection(
+                    title = "Leaderboard",
+                    onClick = {
+                        navController.navigate("leaderboardPage")
+                    }
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Sample leaderboard entries - replace with dynamic content as needed
+                        Text("1. User123 - 1500 points", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text("2. Player456 - 1450 points", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text("3. Gamer789 - 1400 points", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        // Additional leaderboard entries can be added here
+                    }
+                }
+            }
+
+            item {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
