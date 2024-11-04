@@ -20,8 +20,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import java.text.SimpleDateFormat
@@ -44,6 +46,9 @@ fun MainPage(
     }
 
     val dailySummary = remember { mutableStateOf<DailySummary?>(null) }
+
+    val context = LocalContext.current
+
 
     LaunchedEffect(userId) {
         val todayTimestamp = Calendar.getInstance().apply {
@@ -177,13 +182,74 @@ fun MainPage(
                         }
                     },
                     rightSection = {
+                        val advertisement = remember { getRandomAdvertisement(context) }
+
                         SquareEncapsulatedSection(
-                            title = "Placeholder",
+                            title = "",
                             onClick = {
                                 // Define action for right section
-                            }
+                            },
+                            padding = 2
                         ) {
-                            Text("Right Section Content", color = Color.Black)
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .aspectRatio(1f)  // Keep square shape
+                                    .clip(RoundedCornerShape(8.dp))  // Optional rounding for aesthetics
+                                    .padding(0.dp)  // Slight padding to reduce the border effect
+                            ) {
+                                Image(
+                                    painter = painterResource(id = advertisement.imageResId),
+                                    contentDescription = "Advertisement",
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                                // Overlay for description and price at the top-right corner
+                                Column(
+                                    modifier = Modifier
+                                        .align(Alignment.TopStart)
+                                        .padding(2.dp) // Padding around the Column itself
+                                ) {
+                                    // Box for the description
+                                    Box(
+                                        modifier = Modifier
+                                            .background(
+                                                Color.Black.copy(alpha = 0.7f),
+                                                shape = RoundedCornerShape(4.dp)
+                                            )
+                                            .padding(horizontal = 8.dp, vertical = 4.dp) // Padding inside the text box
+                                    ) {
+                                        Text(
+                                            text = advertisement.description,
+                                            color = Color.White,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            maxLines = 1, // Limit to 1 line
+                                            overflow = TextOverflow.Ellipsis // Add ellipsis if text overflows
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(6.dp)) // Spacing between blocks
+
+                                    // Box for the price
+                                    Box(
+                                        modifier = Modifier
+                                            .background(
+                                                Color.Black.copy(alpha = 0.7f),
+                                                shape = RoundedCornerShape(4.dp)
+                                            )
+                                            .padding(horizontal = 8.dp, vertical = 4.dp) // Padding inside the text box
+                                    ) {
+                                        Text(
+                                            text = "$${advertisement.price}",
+                                            color = Color.White,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Normal,
+                                            maxLines = 1, // Limit to 1 line
+                                            overflow = TextOverflow.Ellipsis // Add ellipsis if text overflows
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 )

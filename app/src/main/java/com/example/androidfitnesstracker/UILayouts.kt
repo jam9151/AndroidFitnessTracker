@@ -14,8 +14,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+
 
 @Composable
 fun EncapsulatedSection(
@@ -88,7 +90,8 @@ fun SectionTitle(
 fun SquareEncapsulatedSection(
     title: String,
     onClick: () -> Unit = {},
-    content: @Composable () -> Unit
+    padding: Int = 16, // Define padding as an Int
+    content: @Composable () -> Unit = {}
 ) {
     Box(
         modifier = Modifier
@@ -96,19 +99,21 @@ fun SquareEncapsulatedSection(
             .clip(RoundedCornerShape(12.dp))   // Rounded corners
             .background(Color(0xFFB0B0B0))     // Light grey background
             .clickable { onClick() }
-            .padding(16.dp)                    // Internal padding
+            .padding(padding.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-            Text(
-                text = title,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.Start)
-            )
-            Spacer(modifier = Modifier.height(8.dp)) // Space between title and content
+            if (title != "") {
+                Text(
+                    text = title,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+                Spacer(modifier = Modifier.height(8.dp)) // Space between title and content
+            }
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -155,5 +160,6 @@ fun GoBackButton(navController: NavController, modifier: Modifier = Modifier) {
         Text("Go Back")
     }
 }
+
 
 
