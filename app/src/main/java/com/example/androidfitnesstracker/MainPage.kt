@@ -2,6 +2,7 @@ package com.example.androidfitnesstracker
 
 import android.content.Intent
 import android.graphics.fonts.FontStyle
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -199,11 +200,10 @@ fun MainPage(
 
                     Button(
                         onClick = {
-                            if (dbHelper.getSubscriptionStatus(userId) == SubscriptionStatus.FREE) {
-                                navController.navigate("mySubscription")  // Navigate to Subscription page if FREE
-                            } else {
-                                navController.navigate("mealPlan")        // Navigate to Meal Plan page if PAID
-                            }
+                            sessionManager.logoutUser()  // Clear the session
+                            val intent = Intent(navController.context, LoginActivity::class.java)
+                            navController.context.startActivity(intent)
+                            (navController.context as? ComponentActivity)?.finish()  // Close MainActivity
                         },
                         modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
                     ) {
