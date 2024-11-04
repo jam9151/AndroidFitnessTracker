@@ -74,7 +74,13 @@ dependencies {
 
     //Added, Specify where they are being imported and what they do.
     implementation(libs.androidx.security.crypto.ktx)   //allows secure user login
-    implementation(libs.androidx.navigation.compose)    //one MainActivity page and several smaller lightweight pages
+    implementation(libs.androidx.navigation.compose)    //allows us to have one MainActivity page and several smaller lightweight pages
+
+    implementation(libs.ui) // ui library
+    implementation(libs.material3) // Material 3 library
+    implementation(libs.coil.compose)
+
+
 
 
 

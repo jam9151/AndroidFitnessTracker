@@ -10,9 +10,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.androidfitnesstracker.ui.theme.AndroidFitnessTrackerTheme
 
 class MainActivity : ComponentActivity() {
@@ -23,6 +25,7 @@ class MainActivity : ComponentActivity() {
         val userActivityManager = UserActivityManager(UserDatabaseHelper.getInstance(this))
         val sessionManager = UserSessionManager(this)
         val dbHelper = UserDatabaseHelper.getInstance(this)
+        dbHelper.initializeBasicExercises() // Initialize default exercises
 
         enableEdgeToEdge()
         setContent {
@@ -39,11 +42,28 @@ class MainActivity : ComponentActivity() {
                             dbHelper = dbHelper
                         )
                     }
-                    composable("workoutPage") { WorkoutPage(navController) }
+                    //composable("workoutPage") { WorkoutPage(navController) }  //sample workout page
                     composable("statsPage") { StatsPage(navController) }
                     composable("mySubscription") { MySubscriptionPage(navController) }
                     composable("mealPlan") { MealPlanPage(navController) }
                     composable("leaderboardPage") { LeaderboardPage(navController) }
+
+                    composable("workoutList") {
+                        WorkoutListScreen(
+                            workouts = dbHelper.getAllWorkouts(),
+                            onWorkoutClick = { workout ->
+                                navController.navigate("workoutDetail/${workout.id}")
+                            }
+                        )
+                    }
+
+                    composable(
+                        route = "workoutDetail/{workoutId}",
+                        arguments = listOf(navArgument("workoutId") { type = NavType.IntType })
+                    ) { backStackEntry ->
+                        val workoutId = backStackEntry.arguments?.getInt("workoutId") ?: return@composable
+                        WorkoutDetailScreen(workoutId = workoutId)
+                    }
                 }
             }
         }

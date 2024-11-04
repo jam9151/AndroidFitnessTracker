@@ -66,6 +66,7 @@ fun MainPage(
             .fillMaxSize()
             .background(gradientBackground)  // Apply gradient background here
             .padding(16.dp)
+            .statusBarsPadding()
     ) {
         LazyColumn(
             modifier = Modifier
@@ -131,7 +132,7 @@ fun MainPage(
             item {
                 EncapsulatedSection(
                     title = "Daily Workout",
-                    onClick = { navController.navigate("workoutPage") }
+                    onClick = {  navController.navigate("workoutList") }
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.workout_clipart),

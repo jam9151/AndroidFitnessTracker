@@ -11,7 +11,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     companion object {
         // Main user table
         private const val DATABASE_NAME = "User.db"
-        private const val DATABASE_VERSION = 8  // Incremented version for new schema
+        private const val DATABASE_VERSION = 9  // Incremented version for new schema
         private const val TABLE_USERS = "users"
         private const val COLUMN_ID = "id"
         private const val COLUMN_USERNAME = "username"
@@ -36,8 +36,29 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         private const val COLUMN_CALORIES = "calories"
         private const val COLUMN_DISTANCE = "distance"
 
+        //Workouts Tables
+        private const val TABLE_WORKOUTS = "workouts"
+        private const val COLUMN_WORKOUT_ID = "id"
+        private const val COLUMN_WORKOUT_NAME = "name"
+        private const val COLUMN_WORKOUT_DESCRIPTION = "description"
+        private const val COLUMN_WORKOUT_COVER_IMAGE = "cover_image"
+        private const val COLUMN_WORKOUT_CALORIES = "calories"
+        private const val COLUMN_WORKOUT_DURATION = "duration"
+        private const val COLUMN_WORKOUT_DISTANCE = "distance"
+        private const val COLUMN_WORKOUT_IS_CUSTOM = "is_custom"
+
+        // Exercise steps table
+        private const val TABLE_EXERCISE_STEPS = "exercise_steps"
+        private const val COLUMN_STEP_ID = "id"
+        private const val COLUMN_STEP_WORKOUT_ID = "workout_id"
+        private const val COLUMN_STEP_NUMBER = "step_number"
+        private const val COLUMN_STEP_DESCRIPTION = "description"
+        private const val COLUMN_STEP_IMAGE = "image"
+
+
         // Create Singleton instance
-        @Volatile private var instance: UserDatabaseHelper? = null
+        @Volatile
+        private var instance: UserDatabaseHelper? = null
         fun getInstance(context: Context): UserDatabaseHelper {
             return instance ?: synchronized(this) {
                 instance ?: UserDatabaseHelper(context.applicationContext).also { instance = it }
@@ -74,6 +95,35 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     """
         db.execSQL(createUserActivityTable)
 
+        // Create the workouts table
+        val createWorkoutsTable = """
+        CREATE TABLE $TABLE_WORKOUTS (
+            $COLUMN_WORKOUT_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+            $COLUMN_WORKOUT_NAME TEXT NOT NULL,
+            $COLUMN_WORKOUT_DESCRIPTION TEXT,
+            $COLUMN_WORKOUT_COVER_IMAGE TEXT,        -- Path to the cover image
+            $COLUMN_WORKOUT_CALORIES INTEGER,        -- Estimated calories burned
+            $COLUMN_WORKOUT_DURATION INTEGER,        -- Duration in minutes
+            $COLUMN_WORKOUT_DISTANCE REAL,           -- Distance covered, in miles or kilometers
+            $COLUMN_WORKOUT_IS_CUSTOM INTEGER DEFAULT 0 -- 1 for custom workouts, 0 for predefined
+        )
+    """
+        db.execSQL(createWorkoutsTable)
+
+        // Create the exercise_steps table
+        val createExerciseStepsTable = """
+        CREATE TABLE $TABLE_EXERCISE_STEPS (
+            $COLUMN_STEP_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+            $COLUMN_STEP_WORKOUT_ID INTEGER NOT NULL,      -- Foreign key linking to workouts table
+            $COLUMN_STEP_NUMBER INTEGER NOT NULL,          -- Order of the step in the workout
+            $COLUMN_STEP_DESCRIPTION TEXT NOT NULL,        -- Description of the step
+            $COLUMN_STEP_IMAGE TEXT,                       -- Path to an image for the step
+            FOREIGN KEY ($COLUMN_STEP_WORKOUT_ID) REFERENCES $TABLE_WORKOUTS($COLUMN_WORKOUT_ID) ON DELETE CASCADE
+        )
+    """
+        db.execSQL(createExerciseStepsTable)
+
+
         // Insert the default Guest user with MembershipType "Guest" and SubscriptionStatus "Free"
         val insertGuestUser = """
         INSERT INTO $TABLE_USERS (
@@ -89,6 +139,8 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         db.execSQL("DROP TABLE IF EXISTS $TABLE_USERS")
         db.execSQL("DROP TABLE IF EXISTS $TABLE_USER_ACTIVITY") // Drop other tables if needed
+        db.execSQL("DROP TABLE IF EXISTS $TABLE_WORKOUTS")
+        db.execSQL("DROP TABLE IF EXISTS $TABLE_EXERCISE_STEPS")
         onCreate(db)  // Recreate with updated schema
     }
 
@@ -115,7 +167,8 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
 
     fun isUsernameTaken(username: String): Boolean {
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT * FROM $TABLE_USERS WHERE $COLUMN_USERNAME = ?", arrayOf(username))
+        val cursor =
+            db.rawQuery("SELECT * FROM $TABLE_USERS WHERE $COLUMN_USERNAME = ?", arrayOf(username))
         val exists = cursor.count > 0
         cursor.close()
         return exists
@@ -123,7 +176,8 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
 
     fun isEmailTaken(email: String): Boolean {
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT * FROM $TABLE_USERS WHERE $COLUMN_EMAIL = ?", arrayOf(email))
+        val cursor =
+            db.rawQuery("SELECT * FROM $TABLE_USERS WHERE $COLUMN_EMAIL = ?", arrayOf(email))
         val exists = cursor.count > 0
         cursor.close()
         return exists
@@ -131,14 +185,24 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
 
     fun getEmailByUsername(username: String): String? {
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT $COLUMN_EMAIL FROM $TABLE_USERS WHERE $COLUMN_USERNAME = ?", arrayOf(username))
+        val cursor = db.rawQuery(
+            "SELECT $COLUMN_EMAIL FROM $TABLE_USERS WHERE $COLUMN_USERNAME = ?",
+            arrayOf(username)
+        )
 
-        val email = if (cursor.moveToFirst()) cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_EMAIL)) else null
+        val email =
+            if (cursor.moveToFirst()) cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_EMAIL)) else null
         cursor.close()
         return email  // Returns the email if found, otherwise null
     }
 
-    fun insertActivityRecord(userId: Int, timestamp: Long, steps: Int, calories: Float, distance: Float): Long {
+    fun insertActivityRecord(
+        userId: Int,
+        timestamp: Long,
+        steps: Int,
+        calories: Float,
+        distance: Float
+    ): Long {
         val db = writableDatabase
         val values = ContentValues().apply {
             put(COLUMN_USER_ID, userId)
@@ -174,15 +238,21 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     fun getUserIdByUsername(username: String): Int? {
         val db = readableDatabase
         val cursor = db.rawQuery("SELECT id FROM users WHERE username = ?", arrayOf(username))
-        val userId = if (cursor.moveToFirst()) cursor.getInt(cursor.getColumnIndexOrThrow("id")) else null
+        val userId =
+            if (cursor.moveToFirst()) cursor.getInt(cursor.getColumnIndexOrThrow("id")) else null
         cursor.close()
         return userId
     }
 
     fun getFirstName(userId: Int): String? {
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT $COLUMN_FIRST_NAME FROM $TABLE_USERS WHERE $COLUMN_ID = ?", arrayOf(userId.toString()))
-        val firstName = if (cursor.moveToFirst()) cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FIRST_NAME)) else null
+        val cursor = db.rawQuery(
+            "SELECT $COLUMN_FIRST_NAME FROM $TABLE_USERS WHERE $COLUMN_ID = ?",
+            arrayOf(userId.toString())
+        )
+        val firstName = if (cursor.moveToFirst()) cursor.getString(
+            cursor.getColumnIndexOrThrow(COLUMN_FIRST_NAME)
+        ) else null
         cursor.close()
         return firstName
     }
@@ -199,8 +269,12 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     // Get Last Name
     fun getLastName(userId: Int): String? {
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT $COLUMN_LAST_NAME FROM $TABLE_USERS WHERE $COLUMN_ID = ?", arrayOf(userId.toString()))
-        val lastName = if (cursor.moveToFirst()) cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_LAST_NAME)) else null
+        val cursor = db.rawQuery(
+            "SELECT $COLUMN_LAST_NAME FROM $TABLE_USERS WHERE $COLUMN_ID = ?",
+            arrayOf(userId.toString())
+        )
+        val lastName =
+            if (cursor.moveToFirst()) cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_LAST_NAME)) else null
         cursor.close()
         return lastName
     }
@@ -216,9 +290,16 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
 
     fun getFullName(userId: Int): String {
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT $COLUMN_FIRST_NAME, $COLUMN_LAST_NAME FROM $TABLE_USERS WHERE $COLUMN_ID = ?", arrayOf(userId.toString()))
+        val cursor = db.rawQuery(
+            "SELECT $COLUMN_FIRST_NAME, $COLUMN_LAST_NAME FROM $TABLE_USERS WHERE $COLUMN_ID = ?",
+            arrayOf(userId.toString())
+        )
         val fullName = if (cursor.moveToFirst()) {
-            "${cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FIRST_NAME))} ${cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_LAST_NAME))}"
+            "${cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FIRST_NAME))} ${
+                cursor.getString(
+                    cursor.getColumnIndexOrThrow(COLUMN_LAST_NAME)
+                )
+            }"
         } else {
             "Guest"  // Default in case the user isn't found
         }
@@ -229,8 +310,12 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     // Get Age
     fun getAge(userId: Int): Int? {
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT $COLUMN_AGE FROM $TABLE_USERS WHERE $COLUMN_ID = ?", arrayOf(userId.toString()))
-        val age = if (cursor.moveToFirst()) cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_AGE)) else null
+        val cursor = db.rawQuery(
+            "SELECT $COLUMN_AGE FROM $TABLE_USERS WHERE $COLUMN_ID = ?",
+            arrayOf(userId.toString())
+        )
+        val age =
+            if (cursor.moveToFirst()) cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_AGE)) else null
         cursor.close()
         return age
     }
@@ -247,8 +332,12 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     // Get Weight
     fun getWeight(userId: Int): Float? {
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT $COLUMN_WEIGHT FROM $TABLE_USERS WHERE $COLUMN_ID = ?", arrayOf(userId.toString()))
-        val weight = if (cursor.moveToFirst()) cursor.getFloat(cursor.getColumnIndexOrThrow(COLUMN_WEIGHT)) else null
+        val cursor = db.rawQuery(
+            "SELECT $COLUMN_WEIGHT FROM $TABLE_USERS WHERE $COLUMN_ID = ?",
+            arrayOf(userId.toString())
+        )
+        val weight =
+            if (cursor.moveToFirst()) cursor.getFloat(cursor.getColumnIndexOrThrow(COLUMN_WEIGHT)) else null
         cursor.close()
         return weight
     }
@@ -265,8 +354,12 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     // Get Gender
     fun getGender(userId: Int): String? {
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT $COLUMN_GENDER FROM $TABLE_USERS WHERE $COLUMN_ID = ?", arrayOf(userId.toString()))
-        val gender = if (cursor.moveToFirst()) cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_GENDER)) else null
+        val cursor = db.rawQuery(
+            "SELECT $COLUMN_GENDER FROM $TABLE_USERS WHERE $COLUMN_ID = ?",
+            arrayOf(userId.toString())
+        )
+        val gender =
+            if (cursor.moveToFirst()) cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_GENDER)) else null
         cursor.close()
         return gender
     }
@@ -283,8 +376,12 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     // Get Height
     fun getHeight(userId: Int): Float? {
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT $COLUMN_HEIGHT FROM $TABLE_USERS WHERE $COLUMN_ID = ?", arrayOf(userId.toString()))
-        val height = if (cursor.moveToFirst()) cursor.getFloat(cursor.getColumnIndexOrThrow(COLUMN_HEIGHT)) else null
+        val cursor = db.rawQuery(
+            "SELECT $COLUMN_HEIGHT FROM $TABLE_USERS WHERE $COLUMN_ID = ?",
+            arrayOf(userId.toString())
+        )
+        val height =
+            if (cursor.moveToFirst()) cursor.getFloat(cursor.getColumnIndexOrThrow(COLUMN_HEIGHT)) else null
         cursor.close()
         return height
     }
@@ -301,8 +398,12 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     // Get Diet
     fun getDiet(userId: Int): String? {
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT $COLUMN_DIET FROM $TABLE_USERS WHERE $COLUMN_ID = ?", arrayOf(userId.toString()))
-        val diet = if (cursor.moveToFirst()) cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DIET)) else null
+        val cursor = db.rawQuery(
+            "SELECT $COLUMN_DIET FROM $TABLE_USERS WHERE $COLUMN_ID = ?",
+            arrayOf(userId.toString())
+        )
+        val diet =
+            if (cursor.moveToFirst()) cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DIET)) else null
         cursor.close()
         return diet
     }
@@ -319,8 +420,13 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     // Get Profile Picture Path
     fun getProfilePicturePath(userId: Int): String? {
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT $COLUMN_PROFILE_PICTURE FROM $TABLE_USERS WHERE $COLUMN_ID = ?", arrayOf(userId.toString()))
-        val profilePicture = if (cursor.moveToFirst()) cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PROFILE_PICTURE)) else null
+        val cursor = db.rawQuery(
+            "SELECT $COLUMN_PROFILE_PICTURE FROM $TABLE_USERS WHERE $COLUMN_ID = ?",
+            arrayOf(userId.toString())
+        )
+        val profilePicture = if (cursor.moveToFirst()) cursor.getString(
+            cursor.getColumnIndexOrThrow(COLUMN_PROFILE_PICTURE)
+        ) else null
         cursor.close()
         return profilePicture
     }
@@ -337,8 +443,13 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     // Get Membership Type
     fun getMembershipType(userId: Int): String? {
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT $COLUMN_MEMBERSHIP_TYPE FROM $TABLE_USERS WHERE $COLUMN_ID = ?", arrayOf(userId.toString()))
-        val membershipType = if (cursor.moveToFirst()) cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_MEMBERSHIP_TYPE)) else null
+        val cursor = db.rawQuery(
+            "SELECT $COLUMN_MEMBERSHIP_TYPE FROM $TABLE_USERS WHERE $COLUMN_ID = ?",
+            arrayOf(userId.toString())
+        )
+        val membershipType = if (cursor.moveToFirst()) cursor.getString(
+            cursor.getColumnIndexOrThrow(COLUMN_MEMBERSHIP_TYPE)
+        ) else null
         cursor.close()
         return membershipType
     }
@@ -355,7 +466,10 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     // Get Subscription Status
     fun getSubscriptionStatus(userId: Int): SubscriptionStatus? {
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT $COLUMN_SUBSCRIPTION_STATUS FROM $TABLE_USERS WHERE $COLUMN_ID = ?", arrayOf(userId.toString()))
+        val cursor = db.rawQuery(
+            "SELECT $COLUMN_SUBSCRIPTION_STATUS FROM $TABLE_USERS WHERE $COLUMN_ID = ?",
+            arrayOf(userId.toString())
+        )
         val subscriptionStatus = if (cursor.moveToFirst()) {
             cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUBSCRIPTION_STATUS))
         } else null
@@ -373,4 +487,140 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         db.update(TABLE_USERS, values, "$COLUMN_ID = ?", arrayOf(userId.toString()))
     }
 
+    fun insertWorkout(
+        name: String,
+        description: String,
+        coverImage: String?,
+        calories: Int,
+        duration: Int,
+        distance: Float,
+        isCustom: Boolean
+    ): Long {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(COLUMN_WORKOUT_NAME, name)
+            put(COLUMN_WORKOUT_DESCRIPTION, description)
+            put(COLUMN_WORKOUT_COVER_IMAGE, coverImage)
+            put(COLUMN_WORKOUT_CALORIES, calories)
+            put(COLUMN_WORKOUT_DURATION, duration)
+            put(COLUMN_WORKOUT_DISTANCE, distance)
+            put(COLUMN_WORKOUT_IS_CUSTOM, if (isCustom) 1 else 0)
+        }
+        return db.insert(TABLE_WORKOUTS, null, values)
+    }
+
+    fun getAllWorkouts(): List<Workout> {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT * FROM $TABLE_WORKOUTS", null)
+        val workouts = mutableListOf<Workout>()
+
+        while (cursor.moveToNext()) {
+            val id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_ID))
+            val name = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_NAME))
+            val description =
+                cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_DESCRIPTION))
+            val coverImage =
+                cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_COVER_IMAGE))
+            val calories = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_CALORIES))
+            val duration = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_DURATION))
+            val distance = cursor.getFloat(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_DISTANCE))
+            val isCustom =
+                cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_IS_CUSTOM)) == 1
+
+            workouts.add(
+                Workout(id, name, description, coverImage, calories, duration, distance, isCustom)
+            )
+        }
+        cursor.close()
+        return workouts
+    }
+
+    fun getExerciseSteps(workoutId: Int): List<ExerciseStep> {
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT * FROM $TABLE_EXERCISE_STEPS WHERE $COLUMN_STEP_WORKOUT_ID = ? ORDER BY $COLUMN_STEP_NUMBER",
+            arrayOf(workoutId.toString())
+        )
+        val steps = mutableListOf<ExerciseStep>()
+
+        while (cursor.moveToNext()) {
+            val stepNumber = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_STEP_NUMBER))
+            val description =
+                cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_STEP_DESCRIPTION))
+            val image = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_STEP_IMAGE))
+
+            steps.add(ExerciseStep(stepNumber, description, image))
+        }
+        cursor.close()
+        return steps
+    }
+
+    private fun insertWorkoutIfNotExists(
+        name: String,
+        description: String,
+        coverImage: String,
+        calories: Int,
+        duration: Int,
+        distance: Float
+    ): Long? {
+        val db = writableDatabase
+        val cursor = db.rawQuery(
+            "SELECT $COLUMN_WORKOUT_ID FROM $TABLE_WORKOUTS WHERE $COLUMN_WORKOUT_NAME = ?",
+            arrayOf(name)
+        )
+        val exists = cursor.moveToFirst()
+        cursor.close()
+
+        return if (!exists) {
+            insertWorkout(
+                name = name,
+                description = description,
+                coverImage = coverImage,
+                calories = calories,
+                duration = duration,
+                distance = distance,
+                isCustom = false
+            )
+        } else {
+            null // Return null if the workout already exists
+        }
+    }
+
+    fun insertExerciseStep(workoutId: Long, stepNumber: Int, description: String, image: String?) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(COLUMN_WORKOUT_ID, workoutId)
+            put(COLUMN_STEP_NUMBER, stepNumber)
+            put(COLUMN_STEP_DESCRIPTION, description)
+            put(COLUMN_STEP_IMAGE, image)
+        }
+        db.insert(TABLE_EXERCISE_STEPS, null, values)
+    }
+
+
+    fun initializeBasicExercises() {
+        defaultExercises.forEach { exercise ->
+            val workoutId = insertWorkoutIfNotExists(
+                name = exercise.name,
+                description = exercise.description,
+                coverImage = exercise.coverImage,
+                calories = exercise.calories,
+                duration = exercise.duration,
+                distance = exercise.distance
+            )
+
+            // Insert steps if the workout was just created
+            if (workoutId != null) {
+                exercise.steps.forEach { step ->
+                    insertExerciseStep(
+                        workoutId = workoutId,
+                        stepNumber = step.stepNumber,
+                        description = step.description,
+                        image = step.image
+                    )
+                }
+            }
+        }
+    }
 }
+
