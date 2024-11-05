@@ -169,6 +169,37 @@ fun GoBackButton(navController: NavController, modifier: Modifier = Modifier) {
     }
 }
 
+@Composable
+fun ProgressBarWithLabel(progress: Float, color: Color, label: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.5f) // Make the bar take half the container's width
+                .height(12.dp)
+                .background(Color.White, shape = RoundedCornerShape(6.dp)) // White background with rounded corners
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(progress)
+                    .height(12.dp)
+                    .background(color, shape = RoundedCornerShape(6.dp)) // Colored progress with rounded corners
+            )
+        }
+        Spacer(modifier = Modifier.width(8.dp)) // Space between bar and label
+        Text(
+            text = label,
+            color = Color.White,
+            fontSize = 14.sp,
+            modifier = Modifier.align(Alignment.CenterVertically)
+        )
+    }
+}
+
+
+
 
 
 

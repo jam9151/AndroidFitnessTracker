@@ -105,22 +105,31 @@ fun MainPage(
                         horizontalAlignment = Alignment.Start
                     ) {
                         if (dailySummary.value != null) {
-                            Text(
-                                text = "Calories Burned: ${dailySummary.value!!.calories}",
-                                color = androidx.compose.ui.graphics.Color.White
+                            // Display Calories Progress
+                            ProgressBarWithLabel(
+                                progress = dailySummary.value!!.caloriesPercentage / 100f,
+                                color = Color(0xFFFFA726), // Orange color for calories
+                                label = "${dailySummary.value!!.calories.toInt()} kcal"
                             )
-                            Text(
-                                text = "Steps: ${dailySummary.value!!.steps}",
-                                color = androidx.compose.ui.graphics.Color.White
+
+                            // Display Steps Progress
+                            ProgressBarWithLabel(
+                                progress = dailySummary.value!!.stepsPercentage / 100f,
+                                color = Color(0xFF66BB6A), // Green color for steps
+                                label = "${dailySummary.value!!.steps} steps"
                             )
-                            Text(
-                                text = "Distance: ${dailySummary.value!!.distance} km",
-                                color = androidx.compose.ui.graphics.Color.White
+
+                            // Display Distance Progress
+                            ProgressBarWithLabel(
+                                progress = dailySummary.value!!.distancePercentage / 100f,
+                                color = Color(0xFF42A5F5), // Blue color for distance
+                                label = "${dailySummary.value!!.distance} km"
                             )
+
                         } else {
                             Text(
                                 text = "Loading daily summary...",
-                                color = androidx.compose.ui.graphics.Color.Gray
+                                color = Color.Gray
                             )
                         }
                     }

@@ -12,7 +12,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     companion object {
         // Main user table
         private const val DATABASE_NAME = "User.db"
-        private const val DATABASE_VERSION = 12  // Incremented version for new schema
+        private const val DATABASE_VERSION = 13  // Incremented version for new schema
         private const val TABLE_USERS = "users"
         private const val COLUMN_ID = "id"
         private const val COLUMN_USERNAME = "username"
@@ -28,6 +28,11 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         private const val COLUMN_PROFILE_PICTURE = "profile_picture"
         private const val COLUMN_MEMBERSHIP_TYPE = "membership_type"
         private const val COLUMN_SUBSCRIPTION_STATUS = "subscription_status"
+        private const val COLUMN_GOAL_CALORIES = "goal_calories"
+        private const val COLUMN_GOAL_WEIGHT = "goal_weight"
+        private const val COLUMN_GOAL_STEPS = "goal_steps"
+        private const val COLUMN_GOAL_DISTANCE = "goal_distance"
+
 
         // Activity tracking table
         private const val TABLE_USER_ACTIVITY = "user_activity"
@@ -78,7 +83,11 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         $COLUMN_FIRST_NAME TEXT,
         $COLUMN_LAST_NAME TEXT,
         $COLUMN_MEMBERSHIP_TYPE TEXT,
-        $COLUMN_SUBSCRIPTION_STATUS TEXT
+        $COLUMN_SUBSCRIPTION_STATUS TEXT,
+        $COLUMN_GOAL_CALORIES INTEGER DEFAULT 2000,   -- New goal fields
+        $COLUMN_GOAL_WEIGHT INTEGER DEFAULT 0,
+        $COLUMN_GOAL_STEPS INTEGER DEFAULT 2000,
+        $COLUMN_GOAL_DISTANCE REAL DEFAULT 0
     )
 """
         db.execSQL(createUserTable)
@@ -217,6 +226,13 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
 
     fun getDailySummary(userId: Int, date: Long): DailySummary {
         val db = readableDatabase
+
+        // Retrieve user goals for calculation
+        val goalCalories = getGoalCalories(userId).takeIf { it > 0 } ?: 2000  // Default to 2000 if goal is 0
+        val goalSteps = getGoalSteps(userId).takeIf { it > 0 } ?: 2000        // Default to 2000 if goal is 0
+        val goalDistance = getGoalDistance(userId).takeIf { it > 0 } ?: 5f    // Default to 5 km if goal is 0
+
+        // Fetch the total steps, calories, and distance for the specific day
         val cursor = db.rawQuery(
             "SELECT SUM($COLUMN_STEPS), SUM($COLUMN_CALORIES), SUM($COLUMN_DISTANCE) " +
                     "FROM $TABLE_USER_ACTIVITY " +
@@ -224,17 +240,34 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
             arrayOf(userId.toString(), date.toString())
         )
 
-        var summary = DailySummary(steps = 0, calories = 0f, distance = 0f)
+        var summary = DailySummary(
+            steps = 0,
+            calories = 0f,
+            distance = 0f,
+            caloriesPercentage = 0f,
+            stepsPercentage = 0f,
+            distancePercentage = 0f
+        )
+
+        // Calculate percentages if there’s data
         if (cursor.moveToFirst()) {
+            val steps = cursor.getInt(0)
+            val calories = cursor.getFloat(1)
+            val distance = cursor.getFloat(2)
+
             summary = DailySummary(
-                steps = cursor.getInt(0),
-                calories = cursor.getFloat(1),
-                distance = cursor.getFloat(2)
+                steps = steps,
+                calories = calories,
+                distance = distance,
+                caloriesPercentage = (calories / goalCalories) * 100,
+                stepsPercentage = (steps.toFloat() / goalSteps) * 100,
+                distancePercentage = (distance / goalDistance) * 100
             )
         }
         cursor.close()
         return summary
     }
+
 
     fun getUserIdByUsername(username: String): Int? {
         val db = readableDatabase
@@ -487,6 +520,75 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         }
         db.update(TABLE_USERS, values, "$COLUMN_ID = ?", arrayOf(userId.toString()))
     }
+
+    // Get and Set Goal Calories
+    fun getGoalCalories(userId: Int): Int {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT $COLUMN_GOAL_CALORIES FROM $TABLE_USERS WHERE $COLUMN_ID = ?", arrayOf(userId.toString()))
+        val goalCalories = if (cursor.moveToFirst()) cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_GOAL_CALORIES)) else 2000
+        cursor.close()
+        return goalCalories
+    }
+
+    fun setGoalCalories(userId: Int, goalCalories: Int) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(COLUMN_GOAL_CALORIES, goalCalories)
+        }
+        db.update(TABLE_USERS, values, "$COLUMN_ID = ?", arrayOf(userId.toString()))
+    }
+
+    // Get and Set Goal Weight
+    fun getGoalWeight(userId: Int): Int {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT $COLUMN_GOAL_WEIGHT FROM $TABLE_USERS WHERE $COLUMN_ID = ?", arrayOf(userId.toString()))
+        val goalWeight = if (cursor.moveToFirst()) cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_GOAL_WEIGHT)) else 0
+        cursor.close()
+        return goalWeight
+    }
+
+    fun setGoalWeight(userId: Int, goalWeight: Int) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(COLUMN_GOAL_WEIGHT, goalWeight)
+        }
+        db.update(TABLE_USERS, values, "$COLUMN_ID = ?", arrayOf(userId.toString()))
+    }
+
+    // Get and Set Goal Steps
+    fun getGoalSteps(userId: Int): Int {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT $COLUMN_GOAL_STEPS FROM $TABLE_USERS WHERE $COLUMN_ID = ?", arrayOf(userId.toString()))
+        val goalSteps = if (cursor.moveToFirst()) cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_GOAL_STEPS)) else 2000
+        cursor.close()
+        return goalSteps
+    }
+
+    fun setGoalSteps(userId: Int, goalSteps: Int) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(COLUMN_GOAL_STEPS, goalSteps)
+        }
+        db.update(TABLE_USERS, values, "$COLUMN_ID = ?", arrayOf(userId.toString()))
+    }
+
+    // Get and Set Goal Distance
+    fun getGoalDistance(userId: Int): Float {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT $COLUMN_GOAL_DISTANCE FROM $TABLE_USERS WHERE $COLUMN_ID = ?", arrayOf(userId.toString()))
+        val goalDistance = if (cursor.moveToFirst()) cursor.getFloat(cursor.getColumnIndexOrThrow(COLUMN_GOAL_DISTANCE)) else 0f
+        cursor.close()
+        return goalDistance
+    }
+
+    fun setGoalDistance(userId: Int, goalDistance: Float) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(COLUMN_GOAL_DISTANCE, goalDistance)
+        }
+        db.update(TABLE_USERS, values, "$COLUMN_ID = ?", arrayOf(userId.toString()))
+    }
+
 
     fun insertWorkout(
         name: String,
