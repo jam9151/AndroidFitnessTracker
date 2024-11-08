@@ -64,6 +64,7 @@ fun MainPage(
 
 
     LaunchedEffect(userId) {
+        dbHelper.debugLogActivityTimestamps(userId)
         val todayTimestamp = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
@@ -71,7 +72,7 @@ fun MainPage(
             set(Calendar.MILLISECOND, 0)
         }.timeInMillis
 
-        dailySummary.value = userActivityManager.getDailySummary(userId, todayTimestamp)
+        dailySummary.value = userActivityManager.getDailySummary(userId)
     }
 
     Box(

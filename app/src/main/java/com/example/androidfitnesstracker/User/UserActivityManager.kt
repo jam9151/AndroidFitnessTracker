@@ -13,8 +13,8 @@ class UserActivityManager(
         return dbHelper.insertActivityRecord(userId, timestamp, steps, calories, distance)
     }
 
-    fun getDailySummary(userId: Int, date: Long): DailySummary {
-        return dbHelper.getDailySummary(userId, date)
+    fun getDailySummary(userId: Int): DailySummary {
+        return dbHelper.getDailySummary(userId)
     }
 
     fun logWorkoutCompletion(workout: Workout) {
@@ -27,7 +27,8 @@ class UserActivityManager(
 
         // Insert the workout activity for the current day
         addActivityRecord(userId, timestamp, steps, calories, distance)
-        Log.d("DatabaseInsert", "Logged workout with calories: ${workout.calories}")
+        Log.d("DatabaseInsert", "Logged workout with calories: ${workout.calories} and this timestamp: $timestamp")
     }
+
 
 }

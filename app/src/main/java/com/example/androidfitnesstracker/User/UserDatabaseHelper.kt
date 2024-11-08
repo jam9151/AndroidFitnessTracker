@@ -11,6 +11,7 @@ import com.example.androidfitnesstracker.Membership.SubscriptionStatus
 import com.example.androidfitnesstracker.Workout.Workout
 import com.example.androidfitnesstracker.Workout.DailySummary
 import com.example.androidfitnesstracker.Workout.defaultExercises
+import java.util.Calendar
 import java.util.Locale
 
 class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
@@ -233,8 +234,22 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         return db.insert(TABLE_USER_ACTIVITY, null, values)
     }
 
-    fun getDailySummary(userId: Int, date: Long): DailySummary {
+    fun getDailySummary(userId: Int): DailySummary {
         val db = readableDatabase
+
+        val todayTimestamp = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+
+        val endOfDayTimestamp = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
+        }.timeInMillis
 
         // Retrieve user goals for calculation
         val goalCalories = getGoalCalories(userId).takeIf { it > 0 } ?: 2000  // Default to 2000 if goal is 0
@@ -243,10 +258,13 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
 
         // Fetch the total steps, calories, and distance for the specific day
         val cursor = db.rawQuery(
-            "SELECT SUM($COLUMN_STEPS), SUM($COLUMN_CALORIES), SUM($COLUMN_DISTANCE) " +
-                    "FROM $TABLE_USER_ACTIVITY " +
-                    "WHERE $COLUMN_USER_ID = ? AND date($COLUMN_TIMESTAMP/1000, 'unixepoch') = date(?/1000, 'unixepoch')",
-            arrayOf(userId.toString(), date.toString())
+            """
+        SELECT SUM($COLUMN_STEPS), SUM($COLUMN_CALORIES), SUM($COLUMN_DISTANCE) 
+        FROM $TABLE_USER_ACTIVITY 
+        WHERE $COLUMN_USER_ID = ? 
+        AND $COLUMN_TIMESTAMP BETWEEN ? AND ?
+        """,
+            arrayOf(userId.toString(), todayTimestamp.toString(), endOfDayTimestamp.toString())
         )
 
         var summary = DailySummary(
@@ -275,6 +293,9 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         }
         cursor.close()
         Log.d("DailySummary", "Retrieved daily summary: steps=${summary.steps}, calories=${summary.calories}, distance=${summary.distance}")
+        Log.d("TimestampCheck", "Today’s timestamp (midnight): $todayTimestamp")
+
+
         return summary
     }
 
@@ -754,6 +775,29 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
                 }
             }
         }
+    }
+
+
+    fun debugLogActivityTimestamps(userId: Int) {
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT $COLUMN_TIMESTAMP, $COLUMN_STEPS, $COLUMN_CALORIES, $COLUMN_DISTANCE FROM $TABLE_USER_ACTIVITY WHERE $COLUMN_USER_ID = ?",
+            arrayOf(userId.toString())
+        )
+
+        Log.d("ActivityTimestampDebug", "Logging all activity records for user $userId:")
+
+        while (cursor.moveToNext()) {
+            val timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_TIMESTAMP))
+            val steps = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_STEPS))
+            val calories = cursor.getFloat(cursor.getColumnIndexOrThrow(COLUMN_CALORIES))
+            val distance = cursor.getFloat(cursor.getColumnIndexOrThrow(COLUMN_DISTANCE))
+
+            // Log the raw timestamp and the values associated with it
+            Log.d("ActivityTimestampDebug", "Timestamp: $timestamp, Steps: $steps, Calories: $calories, Distance: $distance")
+        }
+
+        cursor.close()
     }
 }
 
