@@ -80,4 +80,5 @@ class UserSessionManager(context: Context) {
     fun clearAll() {
         sharedPreferences.edit().clear().apply()
     }
+
 }

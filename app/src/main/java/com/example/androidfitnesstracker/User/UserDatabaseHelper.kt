@@ -19,7 +19,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     companion object {
         // Main user table
         private const val DATABASE_NAME = "User.db"
-        private const val DATABASE_VERSION = 14  // Incremented version for new schema
+        private const val DATABASE_VERSION = 15  // Incremented version for new schema
         private const val TABLE_USERS = "users"
         private const val COLUMN_ID = "id"
         private const val COLUMN_USERNAME = "username"
@@ -530,6 +530,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
 
     // Get Subscription Status
     fun getSubscriptionStatus(userId: Int): SubscriptionStatus? {
+        Log.d("SubscriptionCheck", "UserID: $userId")
         val db = readableDatabase
         val cursor = db.rawQuery(
             "SELECT $COLUMN_SUBSCRIPTION_STATUS FROM $TABLE_USERS WHERE $COLUMN_ID = ?",

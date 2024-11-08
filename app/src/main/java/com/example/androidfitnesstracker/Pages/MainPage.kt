@@ -59,6 +59,7 @@ fun MainPage(
 
     val dailySummary = remember { mutableStateOf<DailySummary?>(null) }
     Log.d("DailySummaryCheck", "Calories burned: ${dailySummary.value?.calories}")
+    Log.d("SubscriptionCheck", "Subscription Status: ${dbHelper.getSubscriptionStatus(userId)}")
 
     val context = LocalContext.current
 

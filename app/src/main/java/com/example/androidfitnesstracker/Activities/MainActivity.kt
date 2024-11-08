@@ -14,6 +14,7 @@ import com.example.androidfitnesstracker.Pages.MainPage
 import com.example.androidfitnesstracker.Pages.MealPlanPage
 import com.example.androidfitnesstracker.Pages.MySubscriptionPage
 import com.example.androidfitnesstracker.Pages.StatsPage
+import com.example.androidfitnesstracker.Pages.UpgradePage
 import com.example.androidfitnesstracker.User.UserActivityManager
 import com.example.androidfitnesstracker.User.UserDatabaseHelper
 import com.example.androidfitnesstracker.User.UserSessionManager
@@ -48,9 +49,7 @@ class MainActivity : ComponentActivity() {
                             dbHelper = dbHelper
                         )
                     }
-                    //composable("workoutPage") { WorkoutPage(navController) }  //sample workout page
                     composable("statsPage") { StatsPage(navController) }
-                    composable("mySubscription") { MySubscriptionPage(navController) }
                     composable("mealPlan") { MealPlanPage(navController) }
                     composable("leaderboardPage") { LeaderboardPage(navController) }
 
@@ -63,12 +62,31 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
+                    composable("mySubscription") {
+                        MySubscriptionPage(
+                            dbHelper = dbHelper,
+                            sessionManager = sessionManager,
+                            onUpgradeClick = { navController.navigate("upgradePage") }
+                        )
+                    }
+
+
                     composable(
                         route = "workoutDetail/{workoutId}",
                         arguments = listOf(navArgument("workoutId") { type = NavType.IntType })
                     ) { backStackEntry ->
                         val workoutId = backStackEntry.arguments?.getInt("workoutId") ?: return@composable
                         WorkoutDetailScreen(workoutId = workoutId,userActivityManager = userActivityManager)
+                    }
+
+                    composable("upgradePage") {
+                        UpgradePage(
+                            dbHelper = dbHelper,
+                            userId = sessionManager.getUserId()!!,
+                            onUpgradeSuccess = {
+                                navController.navigate("mySubscription")
+                            }
+                        )
                     }
                 }
             }
