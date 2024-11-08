@@ -9,6 +9,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.androidfitnesstracker.Auth.AuthManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,12 +116,17 @@ fun RegistrationPage(
                 Button(
                     onClick = {
                         // Validate passwords match and proceed to the second page
-                        if (authManager.isEmailValid(email) && password == confirmPassword && password.isNotEmpty()) {
-                            // Move to the second page
+                        if (email.isBlank() || firstName.isBlank() || lastName.isBlank() || username.isBlank() ||
+                            password.isBlank() || confirmPassword.isBlank()
+                        ) {
+                            errorMessage = "All fields are required."
+                        } else if (password != confirmPassword) {
+                            errorMessage = "Passwords do not match."
+                        } else if (!authManager.isEmailValid(email)) {
+                            errorMessage = "Invalid email format."
+                        } else {
                             isFirstPage = false
                             errorMessage = null
-                        } else {
-                            errorMessage = "Please ensure all fields are filled and passwords match."
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -229,23 +238,36 @@ fun RegistrationPage(
                 Button(
                     onClick = {
                         isLoading = true // Show loading indicator
-                        // Convert age, weight, and height to appropriate types and call onRegister
-                        val parsedAge = age.toIntOrNull() ?: 0
-                        val parsedWeight = weight.toFloatOrNull() ?: 0f
-                        val parsedHeight = height.toFloatOrNull() ?: 0f
 
-                        onRegister(
-                            firstName,
-                            lastName,
-                            email,
-                            username,
-                            password,
-                            parsedAge,
-                            parsedWeight,
-                            gender,
-                            parsedHeight,
-                            membershipType
-                        )
+                        CoroutineScope(Dispatchers.IO).launch {
+                            try {
+                                // Parse inputs
+                                val parsedAge = age.toIntOrNull() ?: 0
+                                val parsedWeight = weight.toFloatOrNull() ?: 0f
+                                val parsedHeight = height.toFloatOrNull() ?: 0f
+
+                                onRegister(
+                                    firstName,
+                                    lastName,
+                                    email,
+                                    username,
+                                    password,
+                                    parsedAge,
+                                    parsedWeight,
+                                    gender,
+                                    parsedHeight,
+                                    membershipType
+                                )
+                            } catch (e: Exception) {
+                                withContext(Dispatchers.Main) {
+                                    errorMessage = "Registration failed: ${e.message}"
+                                }
+                            } finally {
+                                withContext(Dispatchers.Main) {
+                                    isLoading = false
+                                }
+                            }
+                        }
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -267,6 +289,7 @@ fun RegistrationPage(
         }
     }
 }
+
 
 
 

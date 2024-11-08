@@ -18,7 +18,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     companion object {
         // Main user table
         private const val DATABASE_NAME = "User.db"
-        private const val DATABASE_VERSION = 14  // Incremented version for new schema
+        private const val DATABASE_VERSION = 18  // Incremented version for new schema
         private const val TABLE_USERS = "users"
         private const val COLUMN_ID = "id"
         private const val COLUMN_USERNAME = "username"
@@ -72,6 +72,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         // Create Singleton instance
         @Volatile
         private var instance: UserDatabaseHelper? = null
+
         fun getInstance(context: Context): UserDatabaseHelper {
             return instance ?: synchronized(this) {
                 instance ?: UserDatabaseHelper(context.applicationContext).also { instance = it }
@@ -80,78 +81,85 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     }
 
     override fun onCreate(db: SQLiteDatabase) {
-        // Create the main user table with updated schema
-        val createUserTable = """
-    CREATE TABLE $TABLE_USERS (
-        $COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT,
-        $COLUMN_USERNAME TEXT,
-        $COLUMN_PASSWORD TEXT,
-        $COLUMN_EMAIL TEXT,
-        $COLUMN_FIRST_NAME TEXT,
-        $COLUMN_LAST_NAME TEXT,
-        $COLUMN_MEMBERSHIP_TYPE TEXT,
-        $COLUMN_SUBSCRIPTION_STATUS TEXT,
-        $COLUMN_GOAL_CALORIES INTEGER DEFAULT 2000,   -- New goal fields
-        $COLUMN_GOAL_WEIGHT INTEGER DEFAULT 0,
-        $COLUMN_GOAL_STEPS INTEGER DEFAULT 2000,
-        $COLUMN_GOAL_DISTANCE REAL DEFAULT 0
-    )
-"""
-        db.execSQL(createUserTable)
+        try {
+            // Create the main user table
+            val createUserTable = """
+            CREATE TABLE IF NOT EXISTS $TABLE_USERS (
+                $COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COLUMN_USERNAME TEXT,
+                $COLUMN_PASSWORD TEXT,
+                $COLUMN_EMAIL TEXT,
+                $COLUMN_FIRST_NAME TEXT,
+                $COLUMN_LAST_NAME TEXT,
+                $COLUMN_AGE INTEGER DEFAULT 0, -- New column
+                $COLUMN_WEIGHT REAL DEFAULT 0, -- New column
+                $COLUMN_HEIGHT REAL DEFAULT 0, -- New column
+                $COLUMN_GENDER TEXT,           -- New column
+                $COLUMN_MEMBERSHIP_TYPE TEXT,
+                $COLUMN_SUBSCRIPTION_STATUS TEXT,
+                $COLUMN_GOAL_CALORIES INTEGER DEFAULT 2000,
+                $COLUMN_GOAL_WEIGHT INTEGER DEFAULT 0,
+                $COLUMN_GOAL_STEPS INTEGER DEFAULT 2000,
+                $COLUMN_GOAL_DISTANCE REAL DEFAULT 0
+            )
+        """
+            db.execSQL(createUserTable)
 
-        // Create the user activity table
-        val createUserActivityTable = """
-        CREATE TABLE $TABLE_USER_ACTIVITY (
-            $COLUMN_USER_ID INTEGER,
-            $COLUMN_TIMESTAMP INTEGER,
-            $COLUMN_STEPS INTEGER,
-            $COLUMN_CALORIES INTEGER,
-            $COLUMN_DISTANCE REAL,
-            FOREIGN KEY ($COLUMN_USER_ID) REFERENCES $TABLE_USERS($COLUMN_ID)
-        )
-    """
-        db.execSQL(createUserActivityTable)
+            // Create the user activity table
+            val createUserActivityTable = """
+            CREATE TABLE IF NOT EXISTS $TABLE_USER_ACTIVITY (
+                $COLUMN_USER_ID INTEGER,
+                $COLUMN_TIMESTAMP INTEGER,
+                $COLUMN_STEPS INTEGER,
+                $COLUMN_CALORIES INTEGER,
+                $COLUMN_DISTANCE REAL,
+                FOREIGN KEY ($COLUMN_USER_ID) REFERENCES $TABLE_USERS($COLUMN_ID)
+            )
+        """
+            db.execSQL(createUserActivityTable)
 
-        // Create the workouts table
-        val createWorkoutsTable = """
-        CREATE TABLE $TABLE_WORKOUTS (
-            $COLUMN_WORKOUT_ID INTEGER PRIMARY KEY AUTOINCREMENT,
-            $COLUMN_WORKOUT_NAME TEXT NOT NULL,
-            $COLUMN_WORKOUT_DESCRIPTION TEXT,
-            $COLUMN_WORKOUT_COVER_IMAGE INTEGER,        -- Drawable Cover Image
-            $COLUMN_WORKOUT_CALORIES INTEGER,        -- Estimated calories burned
-            $COLUMN_WORKOUT_DURATION INTEGER,        -- Duration in minutes
-            $COLUMN_WORKOUT_DISTANCE REAL,           -- Distance covered, in miles or kilometers
-            $COLUMN_WORKOUT_IS_CUSTOM INTEGER DEFAULT 0, -- 1 for custom workouts, 0 for predefined
-            $COLUMN_WORKOUT_STEPS INTEGER
-        )
-    """
-        db.execSQL(createWorkoutsTable)
+            // Create the workouts table
+            val createWorkoutsTable = """
+            CREATE TABLE IF NOT EXISTS $TABLE_WORKOUTS (
+                $COLUMN_WORKOUT_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COLUMN_WORKOUT_NAME TEXT NOT NULL,
+                $COLUMN_WORKOUT_DESCRIPTION TEXT,
+                $COLUMN_WORKOUT_COVER_IMAGE INTEGER,
+                $COLUMN_WORKOUT_CALORIES INTEGER,
+                $COLUMN_WORKOUT_DURATION INTEGER,
+                $COLUMN_WORKOUT_DISTANCE REAL,
+                $COLUMN_WORKOUT_IS_CUSTOM INTEGER DEFAULT 0,
+                $COLUMN_WORKOUT_STEPS INTEGER
+            )
+        """
+            db.execSQL(createWorkoutsTable)
 
-        // Create the exercise_steps table
-        val createExerciseStepsTable = """
-        CREATE TABLE $TABLE_EXERCISE_STEPS (
-            $COLUMN_STEP_ID INTEGER PRIMARY KEY AUTOINCREMENT,
-            $COLUMN_STEP_WORKOUT_ID INTEGER NOT NULL,      -- Foreign key linking to workouts table
-            $COLUMN_STEP_NUMBER INTEGER NOT NULL,          -- Order of the step in the workout
-            $COLUMN_STEP_DESCRIPTION TEXT NOT NULL,        -- Description of the step
-            $COLUMN_STEP_IMAGE INTEGER,                       -- drawable image
-            FOREIGN KEY ($COLUMN_STEP_WORKOUT_ID) REFERENCES $TABLE_WORKOUTS($COLUMN_WORKOUT_ID) ON DELETE CASCADE
-        )
-    """
-        db.execSQL(createExerciseStepsTable)
+            // Create the exercise_steps table
+            val createExerciseStepsTable = """
+            CREATE TABLE IF NOT EXISTS $TABLE_EXERCISE_STEPS (
+                $COLUMN_STEP_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COLUMN_STEP_WORKOUT_ID INTEGER NOT NULL,
+                $COLUMN_STEP_NUMBER INTEGER NOT NULL,
+                $COLUMN_STEP_DESCRIPTION TEXT NOT NULL,
+                $COLUMN_STEP_IMAGE INTEGER,
+                FOREIGN KEY ($COLUMN_STEP_WORKOUT_ID) REFERENCES $TABLE_WORKOUTS($COLUMN_WORKOUT_ID) ON DELETE CASCADE
+            )
+        """
+            db.execSQL(createExerciseStepsTable)
 
-
-        // Insert the default Guest user with MembershipType "Guest" and SubscriptionStatus "Free"
-        val insertGuestUser = """
-        INSERT INTO $TABLE_USERS (
-            $COLUMN_USERNAME, $COLUMN_FIRST_NAME, $COLUMN_LAST_NAME, 
-            $COLUMN_MEMBERSHIP_TYPE, $COLUMN_SUBSCRIPTION_STATUS
-        ) VALUES (
-            'Guest', 'Guest', '', '${MembershipType.GUEST.value}', '${SubscriptionStatus.FREE.value}'
-        )
-    """
-        db.execSQL(insertGuestUser)
+            // Insert the default Guest user
+            val insertGuestUser = """
+            INSERT INTO $TABLE_USERS (
+                $COLUMN_USERNAME, $COLUMN_FIRST_NAME, $COLUMN_LAST_NAME, 
+                $COLUMN_MEMBERSHIP_TYPE, $COLUMN_SUBSCRIPTION_STATUS
+            ) VALUES (
+                'Guest', 'Guest', '', '${MembershipType.GUEST.value}', '${SubscriptionStatus.FREE.value}'
+            )
+        """
+            db.execSQL(insertGuestUser)
+        } catch (e: Exception) {
+            Log.e("DatabaseError", "Error creating tables: ${e.message}")
+        }
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
