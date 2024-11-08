@@ -1,20 +1,24 @@
-package com.example.androidfitnesstracker
+package com.example.androidfitnesstracker.Activities
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.androidfitnesstracker.Pages.LeaderboardPage
+import com.example.androidfitnesstracker.Pages.MainPage
+import com.example.androidfitnesstracker.Pages.MealPlanPage
+import com.example.androidfitnesstracker.Pages.MySubscriptionPage
+import com.example.androidfitnesstracker.Pages.StatsPage
+import com.example.androidfitnesstracker.User.UserActivityManager
+import com.example.androidfitnesstracker.User.UserDatabaseHelper
+import com.example.androidfitnesstracker.User.UserSessionManager
+import com.example.androidfitnesstracker.Pages.WorkoutDetailScreen
+import com.example.androidfitnesstracker.Pages.WorkoutListScreen
 import com.example.androidfitnesstracker.ui.theme.AndroidFitnessTrackerTheme
 
 class MainActivity : ComponentActivity() {

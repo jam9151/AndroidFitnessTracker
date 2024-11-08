@@ -1,6 +1,7 @@
-package com.example.androidfitnesstracker
+package com.example.androidfitnesstracker.Auth
 
 import android.util.Patterns
+import com.example.androidfitnesstracker.User.UserDatabaseHelper
 import java.security.MessageDigest
 
 
