@@ -1,9 +1,8 @@
-package com.example.androidfitnesstracker
+package com.example.androidfitnesstracker.Membership
 
 import android.content.Context
 import androidx.annotation.DrawableRes
 import com.example.androidfitnesstracker.R
-import kotlin.random.Random
 
 data class Advertisement(
     @DrawableRes val imageResId: Int,

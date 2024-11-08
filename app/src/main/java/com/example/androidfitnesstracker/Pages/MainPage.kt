@@ -1,12 +1,10 @@
-package com.example.androidfitnesstracker
+package com.example.androidfitnesstracker.Pages
 
 import android.content.Intent
-import android.graphics.fonts.FontStyle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.*
@@ -27,6 +25,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.androidfitnesstracker.ui.theme.DualEncapsulatedSection
+import com.example.androidfitnesstracker.ui.theme.EncapsulatedSection
+import com.example.androidfitnesstracker.Activities.LoginActivity
+import com.example.androidfitnesstracker.Membership.getRandomAdvertisement
+import com.example.androidfitnesstracker.ui.theme.ProgressBarWithLabel
+import com.example.androidfitnesstracker.R
+import com.example.androidfitnesstracker.ui.theme.SquareEncapsulatedSection
+import com.example.androidfitnesstracker.Membership.SubscriptionStatus
+import com.example.androidfitnesstracker.User.UserActivityManager
+import com.example.androidfitnesstracker.User.UserDatabaseHelper
+import com.example.androidfitnesstracker.User.UserSessionManager
+import com.example.androidfitnesstracker.Workout.DailySummary
+import com.example.androidfitnesstracker.ui.theme.gradientBackground
 import java.text.SimpleDateFormat
 import java.util.*
 

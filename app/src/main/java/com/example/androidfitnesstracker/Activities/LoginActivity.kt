@@ -1,21 +1,20 @@
-package com.example.androidfitnesstracker
+package com.example.androidfitnesstracker.Activities
 
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.androidfitnesstracker.ui.theme.AndroidFitnessTrackerTheme
-import com.example.androidfitnesstracker.AuthManager
-import com.example.androidfitnesstracker.AuthScreen
-import com.example.androidfitnesstracker.UserDatabaseHelper
-
+import com.example.androidfitnesstracker.Auth.AuthManager
+import com.example.androidfitnesstracker.Auth.SignUpResult
+import com.example.androidfitnesstracker.Pages.AuthScreen
+import com.example.androidfitnesstracker.User.UserDatabaseHelper
+import com.example.androidfitnesstracker.User.UserSessionManager
 
 
 class LoginActivity : ComponentActivity() {

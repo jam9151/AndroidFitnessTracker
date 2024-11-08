@@ -1,4 +1,4 @@
-package com.example.androidfitnesstracker
+package com.example.androidfitnesstracker.Membership
 
 enum class SubscriptionStatus(val value: String) {
     FREE("Free"),

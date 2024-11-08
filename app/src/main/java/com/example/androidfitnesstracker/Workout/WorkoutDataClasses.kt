@@ -1,4 +1,4 @@
-package com.example.androidfitnesstracker
+package com.example.androidfitnesstracker.Workout
 
 
 data class Workout(

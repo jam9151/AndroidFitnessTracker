@@ -1,4 +1,4 @@
-package com.example.androidfitnesstracker
+package com.example.androidfitnesstracker.Membership
 
 enum class MembershipType(val value: String) {
     USER("User"),

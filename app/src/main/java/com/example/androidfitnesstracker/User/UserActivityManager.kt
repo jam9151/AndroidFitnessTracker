@@ -1,9 +1,8 @@
-package com.example.androidfitnesstracker
+package com.example.androidfitnesstracker.User
 
-import android.content.ContentValues
-import android.content.Context
-import android.database.sqlite.SQLiteDatabase
 import android.util.Log
+import com.example.androidfitnesstracker.Workout.Workout
+import com.example.androidfitnesstracker.Workout.DailySummary
 
 class UserActivityManager(
     private val dbHelper: UserDatabaseHelper,

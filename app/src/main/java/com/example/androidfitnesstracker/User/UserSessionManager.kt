@@ -1,4 +1,4 @@
-package com.example.androidfitnesstracker
+package com.example.androidfitnesstracker.User
 
 import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences

@@ -1,6 +1,5 @@
-package com.example.androidfitnesstracker
+package com.example.androidfitnesstracker.Pages
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.Text
@@ -21,8 +20,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.androidfitnesstracker.R
+import com.example.androidfitnesstracker.User.UserActivityManager
+import com.example.androidfitnesstracker.User.UserDatabaseHelper
+import com.example.androidfitnesstracker.Workout.ExerciseStep
+import com.example.androidfitnesstracker.Workout.Workout
 
 
 /* //Sample workout page

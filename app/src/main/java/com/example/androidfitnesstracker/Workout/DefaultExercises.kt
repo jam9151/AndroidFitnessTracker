@@ -1,6 +1,7 @@
-package com.example.androidfitnesstracker
+package com.example.androidfitnesstracker.Workout
 
 import android.util.Log
+import com.example.androidfitnesstracker.R
 
 data class DefaultExercise(
     val name: String,

@@ -1,10 +1,16 @@
-package com.example.androidfitnesstracker
+package com.example.androidfitnesstracker.User
 
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
+import com.example.androidfitnesstracker.Workout.ExerciseStep
+import com.example.androidfitnesstracker.Membership.MembershipType
+import com.example.androidfitnesstracker.Membership.SubscriptionStatus
+import com.example.androidfitnesstracker.Workout.Workout
+import com.example.androidfitnesstracker.Workout.DailySummary
+import com.example.androidfitnesstracker.Workout.defaultExercises
 import java.util.Locale
 
 class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
@@ -529,7 +535,9 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     fun getGoalCalories(userId: Int): Int {
         val db = readableDatabase
         val cursor = db.rawQuery("SELECT $COLUMN_GOAL_CALORIES FROM $TABLE_USERS WHERE $COLUMN_ID = ?", arrayOf(userId.toString()))
-        val goalCalories = if (cursor.moveToFirst()) cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_GOAL_CALORIES)) else 2000
+        val goalCalories = if (cursor.moveToFirst()) cursor.getInt(cursor.getColumnIndexOrThrow(
+            COLUMN_GOAL_CALORIES
+        )) else 2000
         cursor.close()
         return goalCalories
     }
@@ -546,7 +554,9 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     fun getGoalWeight(userId: Int): Int {
         val db = readableDatabase
         val cursor = db.rawQuery("SELECT $COLUMN_GOAL_WEIGHT FROM $TABLE_USERS WHERE $COLUMN_ID = ?", arrayOf(userId.toString()))
-        val goalWeight = if (cursor.moveToFirst()) cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_GOAL_WEIGHT)) else 0
+        val goalWeight = if (cursor.moveToFirst()) cursor.getInt(cursor.getColumnIndexOrThrow(
+            COLUMN_GOAL_WEIGHT
+        )) else 0
         cursor.close()
         return goalWeight
     }
@@ -563,7 +573,9 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     fun getGoalSteps(userId: Int): Int {
         val db = readableDatabase
         val cursor = db.rawQuery("SELECT $COLUMN_GOAL_STEPS FROM $TABLE_USERS WHERE $COLUMN_ID = ?", arrayOf(userId.toString()))
-        val goalSteps = if (cursor.moveToFirst()) cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_GOAL_STEPS)) else 2000
+        val goalSteps = if (cursor.moveToFirst()) cursor.getInt(cursor.getColumnIndexOrThrow(
+            COLUMN_GOAL_STEPS
+        )) else 2000
         cursor.close()
         return goalSteps
     }
@@ -580,7 +592,9 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     fun getGoalDistance(userId: Int): Float {
         val db = readableDatabase
         val cursor = db.rawQuery("SELECT $COLUMN_GOAL_DISTANCE FROM $TABLE_USERS WHERE $COLUMN_ID = ?", arrayOf(userId.toString()))
-        val goalDistance = if (cursor.moveToFirst()) cursor.getFloat(cursor.getColumnIndexOrThrow(COLUMN_GOAL_DISTANCE)) else 0f
+        val goalDistance = if (cursor.moveToFirst()) cursor.getFloat(cursor.getColumnIndexOrThrow(
+            COLUMN_GOAL_DISTANCE
+        )) else 0f
         cursor.close()
         return goalDistance
     }
@@ -629,13 +643,17 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
             val workout = Workout(
                 id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_ID)),
                 name = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_NAME)),
-                description = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_DESCRIPTION)),
+                description = cursor.getString(cursor.getColumnIndexOrThrow(
+                    COLUMN_WORKOUT_DESCRIPTION
+                )),
                 coverImage = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_COVER_IMAGE)),
                 calories = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_CALORIES)),
                 duration = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_DURATION)),
                 distance = cursor.getFloat(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_DISTANCE)),
                 steps = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_STEPS)),
-                instructions = getExerciseSteps(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_ID))),
+                instructions = getExerciseSteps(cursor.getInt(cursor.getColumnIndexOrThrow(
+                    COLUMN_WORKOUT_ID
+                ))),
                 isCustom = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_IS_CUSTOM)) == 1,
             )
             //Log.d("DatabaseRetrieve", "Retrieved workout: ${workout.name}, coverImage: ${workout.coverImage}") // Log after retrieval
