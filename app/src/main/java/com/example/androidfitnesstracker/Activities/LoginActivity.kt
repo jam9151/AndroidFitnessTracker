@@ -11,8 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.androidfitnesstracker.ui.theme.AndroidFitnessTrackerTheme
 import com.example.androidfitnesstracker.Auth.AuthManager
-import com.example.androidfitnesstracker.Pages.AuthScreen
 import com.example.androidfitnesstracker.Auth.SignUpResult
+import com.example.androidfitnesstracker.Pages.AuthScreen
 import com.example.androidfitnesstracker.User.UserDatabaseHelper
 import com.example.androidfitnesstracker.User.UserSessionManager
 

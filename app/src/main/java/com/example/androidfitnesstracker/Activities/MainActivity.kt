@@ -26,8 +26,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // Create an instance of UserActivityManager and get the current user ID
-        val userActivityManager = UserActivityManager(UserDatabaseHelper.getInstance(this))
         val sessionManager = UserSessionManager(this)
+        val userActivityManager = UserActivityManager(
+            UserDatabaseHelper.getInstance(this),
+            sessionManager)
         val dbHelper = UserDatabaseHelper.getInstance(this)
         dbHelper.initializeBasicExercises() // Initialize default exercises
 
@@ -66,7 +68,7 @@ class MainActivity : ComponentActivity() {
                         arguments = listOf(navArgument("workoutId") { type = NavType.IntType })
                     ) { backStackEntry ->
                         val workoutId = backStackEntry.arguments?.getInt("workoutId") ?: return@composable
-                        WorkoutDetailScreen(workoutId = workoutId)
+                        WorkoutDetailScreen(workoutId = workoutId,userActivityManager = userActivityManager)
                     }
                 }
             }

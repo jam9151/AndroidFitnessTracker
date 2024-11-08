@@ -1,6 +1,5 @@
 package com.example.androidfitnesstracker.Pages
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.Text
@@ -9,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -21,9 +21,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.androidfitnesstracker.Workout.ExerciseStep
 import com.example.androidfitnesstracker.R
+import com.example.androidfitnesstracker.User.UserActivityManager
 import com.example.androidfitnesstracker.User.UserDatabaseHelper
+import com.example.androidfitnesstracker.Workout.ExerciseStep
 import com.example.androidfitnesstracker.Workout.Workout
 
 
@@ -49,7 +50,7 @@ fun WorkoutPage(navController: NavController) {
 
 
 @Composable
-fun WorkoutDetailScreen(workoutId: Int) {
+fun WorkoutDetailScreen(workoutId: Int, userActivityManager: UserActivityManager) {
     val dbHelper = UserDatabaseHelper.getInstance(LocalContext.current)
     val workout = dbHelper.getAllWorkouts().firstOrNull { it.id == workoutId }
     val steps = dbHelper.getExerciseSteps(workoutId)
@@ -78,6 +79,16 @@ fun WorkoutDetailScreen(workoutId: Int) {
                 ExerciseStepItem(step)
             }
         }
+
+        Spacer(modifier = Modifier.weight(1f))  // Pushes button to the bottom
+        workout?.let {
+            Button(
+                onClick = { userActivityManager.logWorkoutCompletion(it) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Complete Workout")
+            }
+        }
     }
 }
 
@@ -86,7 +97,7 @@ fun WorkoutItem(
     workout: Workout,
     onClick: () -> Unit
 ) {
-    Log.d("WorkoutItem", "Displaying workout: ${workout.name}, coverImageResId: ${workout.coverImage}")
+    //Log.d("WorkoutItem", "Displaying workout: ${workout.name}, coverImageResId: ${workout.coverImage}")
     Card(
         modifier = Modifier
             .fillMaxWidth()

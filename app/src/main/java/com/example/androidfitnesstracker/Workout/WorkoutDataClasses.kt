@@ -10,7 +10,8 @@ data class Workout(
     val duration: Int, // in minutes
     val distance: Float, // in miles or kilometers
     val isCustom: Boolean,
-    val steps: List<ExerciseStep> = emptyList() // Steps for each workout
+    val steps: Int,
+    val instructions: List<ExerciseStep> = emptyList() // Steps for each workout
 )
 
 data class ExerciseStep(

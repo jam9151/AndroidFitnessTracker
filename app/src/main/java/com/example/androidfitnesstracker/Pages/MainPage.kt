@@ -1,6 +1,7 @@
 package com.example.androidfitnesstracker.Pages
 
 import android.content.Intent
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -24,10 +25,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.androidfitnesstracker.Activities.LoginActivity
-import com.example.androidfitnesstracker.Workout.DailySummary
 import com.example.androidfitnesstracker.ui.theme.DualEncapsulatedSection
 import com.example.androidfitnesstracker.ui.theme.EncapsulatedSection
+import com.example.androidfitnesstracker.Activities.LoginActivity
+import com.example.androidfitnesstracker.Membership.getRandomAdvertisement
 import com.example.androidfitnesstracker.ui.theme.ProgressBarWithLabel
 import com.example.androidfitnesstracker.R
 import com.example.androidfitnesstracker.ui.theme.SquareEncapsulatedSection
@@ -35,7 +36,7 @@ import com.example.androidfitnesstracker.Membership.SubscriptionStatus
 import com.example.androidfitnesstracker.User.UserActivityManager
 import com.example.androidfitnesstracker.User.UserDatabaseHelper
 import com.example.androidfitnesstracker.User.UserSessionManager
-import com.example.androidfitnesstracker.Membership.getRandomAdvertisement
+import com.example.androidfitnesstracker.Workout.DailySummary
 import com.example.androidfitnesstracker.ui.theme.gradientBackground
 import java.text.SimpleDateFormat
 import java.util.*
@@ -57,6 +58,7 @@ fun MainPage(
     }
 
     val dailySummary = remember { mutableStateOf<DailySummary?>(null) }
+    Log.d("DailySummaryCheck", "Calories burned: ${dailySummary.value?.calories}")
 
     val context = LocalContext.current
 
