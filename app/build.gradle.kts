@@ -62,7 +62,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.security.crypto.ktx)
     implementation(libs.androidx.storage)
-<<<<<<< HEAD
+
     implementation(libs.androidx.foundation.layout.android)
     implementation(libs.androidx.foundation.layout.android)
     implementation(libs.androidx.foundation.layout.android)
@@ -70,9 +70,7 @@ dependencies {
     implementation(libs.androidx.foundation.layout.android)
     implementation(libs.androidx.ui.test.android)
     implementation(libs.androidx.foundation.layout.android)
-=======
 
->>>>>>> FinishRegistration
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
