@@ -2,6 +2,7 @@ package com.example.androidfitnesstracker
 
 import android.content.Intent
 import android.graphics.fonts.FontStyle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -46,6 +47,7 @@ fun MainPage(
     }
 
     val dailySummary = remember { mutableStateOf<DailySummary?>(null) }
+    Log.d("DailySummaryCheck", "Calories burned: ${dailySummary.value?.calories}")
 
     val context = LocalContext.current
 

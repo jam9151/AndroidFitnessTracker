@@ -12,7 +12,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     companion object {
         // Main user table
         private const val DATABASE_NAME = "User.db"
-        private const val DATABASE_VERSION = 13  // Incremented version for new schema
+        private const val DATABASE_VERSION = 14  // Incremented version for new schema
         private const val TABLE_USERS = "users"
         private const val COLUMN_ID = "id"
         private const val COLUMN_USERNAME = "username"
@@ -52,6 +52,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         private const val COLUMN_WORKOUT_DURATION = "duration"
         private const val COLUMN_WORKOUT_DISTANCE = "distance"
         private const val COLUMN_WORKOUT_IS_CUSTOM = "is_custom"
+        private const val COLUMN_WORKOUT_STEPS = "physical_steps"
 
         // Exercise steps table
         private const val TABLE_EXERCISE_STEPS = "exercise_steps"
@@ -98,7 +99,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
             $COLUMN_USER_ID INTEGER,
             $COLUMN_TIMESTAMP INTEGER,
             $COLUMN_STEPS INTEGER,
-            $COLUMN_CALORIES REAL,
+            $COLUMN_CALORIES INTEGER,
             $COLUMN_DISTANCE REAL,
             FOREIGN KEY ($COLUMN_USER_ID) REFERENCES $TABLE_USERS($COLUMN_ID)
         )
@@ -115,7 +116,8 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
             $COLUMN_WORKOUT_CALORIES INTEGER,        -- Estimated calories burned
             $COLUMN_WORKOUT_DURATION INTEGER,        -- Duration in minutes
             $COLUMN_WORKOUT_DISTANCE REAL,           -- Distance covered, in miles or kilometers
-            $COLUMN_WORKOUT_IS_CUSTOM INTEGER DEFAULT 0 -- 1 for custom workouts, 0 for predefined
+            $COLUMN_WORKOUT_IS_CUSTOM INTEGER DEFAULT 0, -- 1 for custom workouts, 0 for predefined
+            $COLUMN_WORKOUT_STEPS INTEGER
         )
     """
         db.execSQL(createWorkoutsTable)
@@ -210,7 +212,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         userId: Int,
         timestamp: Long,
         steps: Int,
-        calories: Float,
+        calories: Int,
         distance: Float
     ): Long {
         val db = writableDatabase
@@ -221,6 +223,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
             put(COLUMN_CALORIES, calories)
             put(COLUMN_DISTANCE, distance)
         }
+        Log.d("DatabaseInsert", "Inserting activity record: steps=$steps, calories=$calories, distance=$distance")
         return db.insert(TABLE_USER_ACTIVITY, null, values)
     }
 
@@ -265,6 +268,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
             )
         }
         cursor.close()
+        Log.d("DailySummary", "Retrieved daily summary: steps=${summary.steps}, calories=${summary.calories}, distance=${summary.distance}")
         return summary
     }
 
@@ -597,6 +601,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         calories: Int,
         duration: Int,
         distance: Float,
+        steps: Int,
         isCustom: Boolean
     ): Long {
         Log.d("DatabaseInsert", "Inserting workout: $name, coverImageResId: $coverImage") // Log before insertion
@@ -608,6 +613,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
             put(COLUMN_WORKOUT_CALORIES, calories)
             put(COLUMN_WORKOUT_DURATION, duration)
             put(COLUMN_WORKOUT_DISTANCE, distance)
+            put(COLUMN_WORKOUT_STEPS, steps)
             put(COLUMN_WORKOUT_IS_CUSTOM, if (isCustom) 1 else 0)
         }
 
@@ -624,15 +630,15 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
                 id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_ID)),
                 name = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_NAME)),
                 description = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_DESCRIPTION)),
-                //val coverImage =
-                //    cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_COVER_IMAGE))
-                coverImage = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_COVER_IMAGE)), // Set image only if it's a valid ID
+                coverImage = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_COVER_IMAGE)),
                 calories = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_CALORIES)),
                 duration = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_DURATION)),
                 distance = cursor.getFloat(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_DISTANCE)),
+                steps = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_STEPS)),
+                instructions = getExerciseSteps(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_ID))),
                 isCustom = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORKOUT_IS_CUSTOM)) == 1,
             )
-            Log.d("DatabaseRetrieve", "Retrieved workout: ${workout.name}, coverImage: ${workout.coverImage}") // Log after retrieval
+            //Log.d("DatabaseRetrieve", "Retrieved workout: ${workout.name}, coverImage: ${workout.coverImage}") // Log after retrieval
             workouts.add(workout)
         }
         cursor.close()
@@ -665,7 +671,8 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         coverImage: Int,
         calories: Int,
         duration: Int,
-        distance: Float
+        distance: Float,
+        steps: Int,
     ): Long? {
         val db = writableDatabase
         val cursor = db.rawQuery(
@@ -683,6 +690,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
                 calories = calories,
                 duration = duration,
                 distance = distance,
+                steps = steps,
                 isCustom = false
             )
         } else {
@@ -711,13 +719,14 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
                     coverImage = it,
                     calories = exercise.calories,
                     duration = exercise.duration,
-                    distance = exercise.distance
+                    distance = exercise.distance,
+                    steps = exercise.steps
                 )
             }
 
             // Insert steps if the workout was just created
             if (workoutId != null) {
-                exercise.steps.forEach { step ->
+                exercise.instructions.forEach { step ->
                     insertExerciseStep(
                         workoutId = workoutId,
                         stepNumber = step.stepNumber,

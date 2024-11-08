@@ -47,7 +47,7 @@ fun WorkoutPage(navController: NavController) {
 
 
 @Composable
-fun WorkoutDetailScreen(workoutId: Int) {
+fun WorkoutDetailScreen(workoutId: Int, userActivityManager: UserActivityManager) {
     val dbHelper = UserDatabaseHelper.getInstance(LocalContext.current)
     val workout = dbHelper.getAllWorkouts().firstOrNull { it.id == workoutId }
     val steps = dbHelper.getExerciseSteps(workoutId)
@@ -76,6 +76,16 @@ fun WorkoutDetailScreen(workoutId: Int) {
                 ExerciseStepItem(step)
             }
         }
+
+        Spacer(modifier = Modifier.weight(1f))  // Pushes button to the bottom
+        workout?.let {
+            Button(
+                onClick = { userActivityManager.logWorkoutCompletion(it) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Complete Workout")
+            }
+        }
     }
 }
 
@@ -84,7 +94,7 @@ fun WorkoutItem(
     workout: Workout,
     onClick: () -> Unit
 ) {
-    Log.d("WorkoutItem", "Displaying workout: ${workout.name}, coverImageResId: ${workout.coverImage}")
+    //Log.d("WorkoutItem", "Displaying workout: ${workout.name}, coverImageResId: ${workout.coverImage}")
     Card(
         modifier = Modifier
             .fillMaxWidth()
