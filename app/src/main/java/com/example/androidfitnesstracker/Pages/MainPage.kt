@@ -5,12 +5,14 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -169,20 +172,41 @@ fun MainPage(
             }
 
             // Stats Section
+            // Stats Section
             item {
-                EncapsulatedSection(
-                    title = "Track Your Progress",
-                    onClick = { navController.navigate("statsPage") }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.Gray) // Optional background to match your theme
+                        .clickable { navController.navigate("statsPage") }
                 ) {
+                    // Background Image
                     Image(
                         painter = painterResource(id = R.drawable.stats_clipart),
                         contentDescription = "Stats Image",
+                        contentScale = ContentScale.Crop, // Ensures the image fills the container
+                        alignment = Alignment.TopCenter,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(80.dp)
+                            .height(150.dp) // Match desired section height
+                            //.fillMaxSize()
+                    )
+
+                    // Overlay Text
+                    Text(
+                        text = "Track Your Progress",
+                        color = Color.Black,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(8.dp) // Optional padding to position text better
                     )
                 }
             }
+
+
 
             item {
                 DualEncapsulatedSection(
