@@ -22,6 +22,15 @@ data class ExerciseStepData(
 
 val defaultExercises = listOf(
     DefaultExercise(
+        name = "DO RANDOM EXERCISE",
+        description = "THE SPINWHEEL DECIDES YOUR FATE",
+        imageResId = R.drawable.spin_wheel,
+        calories = 350,
+        duration = 45,
+        distance = 0f,
+        steps = 0,
+    ),
+    DefaultExercise(
         name = "Running",
         description = "Outdoor running on pavement, ideal for cardio and endurance.",
         imageResId = R.drawable.running_small,
@@ -99,5 +108,6 @@ val defaultExercises = listOf(
             ExerciseStepData(4, "Crunches - 3 sets of 15 reps", null),
             ExerciseStepData(5, "Plank - Hold for 1 minute", null)
         )
-    )
+    ),
+
 )
