@@ -809,5 +809,108 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
 
         cursor.close()
     }
+
+
+    fun getLast10DaysCalories(userId: Int): List<Int> {
+        val data = mutableListOf<Int>()
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            """
+        SELECT SUM($COLUMN_CALORIES)
+        FROM $TABLE_USER_ACTIVITY
+        WHERE $COLUMN_USER_ID = ?
+        GROUP BY date($COLUMN_TIMESTAMP/1000, 'unixepoch')
+        ORDER BY date($COLUMN_TIMESTAMP/1000, 'unixepoch') DESC
+        LIMIT 10
+        """,
+            arrayOf(userId.toString())
+        )
+        while (cursor.moveToNext()) {
+            data.add(cursor.getFloat(0).toInt()) // Cast to Int
+        }
+        cursor.close()
+
+        // Fill missing days with 0
+        Log.d("DatabaseHelper", "getLast10DaysCalories: $data (size: ${data.size})")
+        return data + List(10 - data.size) { 0 }
+    }
+
+
+    fun getLast10DaysSteps(userId: Int): List<Int> {
+        val data = mutableListOf<Int>()
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            """
+        SELECT SUM($COLUMN_STEPS)
+        FROM $TABLE_USER_ACTIVITY
+        WHERE $COLUMN_USER_ID = ?
+        GROUP BY date($COLUMN_TIMESTAMP/1000, 'unixepoch')
+        ORDER BY date($COLUMN_TIMESTAMP/1000, 'unixepoch') DESC
+        LIMIT 10
+        """,
+            arrayOf(userId.toString())
+        )
+        while (cursor.moveToNext()) {
+            data.add(cursor.getFloat(0).toInt()) // Cast to Int
+        }
+        cursor.close()
+
+        // Fill missing days with 0
+        return data + List(10 - data.size) { 0 }
+    }
+
+
+    fun getLast10DaysDistance(userId: Int): List<Float> {
+        val data = mutableListOf<Float>()
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            """
+        SELECT SUM($COLUMN_DISTANCE)
+        FROM $TABLE_USER_ACTIVITY
+        WHERE $COLUMN_USER_ID = ?
+        GROUP BY date($COLUMN_TIMESTAMP/1000, 'unixepoch')
+        ORDER BY date($COLUMN_TIMESTAMP/1000, 'unixepoch') DESC
+        LIMIT 10
+        """,
+            arrayOf(userId.toString())
+        )
+        while (cursor.moveToNext()) {
+            data.add(cursor.getFloat(0))
+        }
+        cursor.close()
+
+        // Fill missing days with 0.0
+        return data + List(10 - data.size) { 0f }
+    }
+
+
+    fun getYearlyData(userId: Int): List<Triple<Float, Int, Float>> {
+        val data = mutableListOf<Triple<Float, Int, Float>>()
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            """
+        SELECT strftime('%m', date($COLUMN_TIMESTAMP/1000, 'unixepoch')) AS month,
+               SUM($COLUMN_CALORIES) AS calories,
+               SUM($COLUMN_DISTANCE) AS distance,
+               SUM($COLUMN_STEPS) AS steps
+        FROM $TABLE_USER_ACTIVITY
+        WHERE $COLUMN_USER_ID = ?
+        GROUP BY month
+        ORDER BY month ASC
+        """,
+            arrayOf(userId.toString())
+        )
+        while (cursor.moveToNext()) {
+            val month = cursor.getInt(0)
+            val calories = cursor.getFloat(1)
+            val distance = cursor.getFloat(2)
+            val steps = cursor.getFloat(3)
+            data.add(Triple(calories, steps.toInt(), distance))
+        }
+        cursor.close()
+
+        // Fill missing months with default values
+        return data + List(12 - data.size) { Triple(0f, 0, 0f) }
+    }
 }
 

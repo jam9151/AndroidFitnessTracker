@@ -49,7 +49,10 @@ class MainActivity : ComponentActivity() {
                             dbHelper = dbHelper
                         )
                     }
-                    composable("statsPage") { StatsPage(navController) }
+                    composable("statsPage") { StatsPage(
+                        dbHelper = dbHelper,
+                        sessionManager = sessionManager
+                        ) }
                     composable("mealPlan") { MealPlanPage(navController) }
                     composable("leaderboardPage") { LeaderboardPage(navController) }
 
