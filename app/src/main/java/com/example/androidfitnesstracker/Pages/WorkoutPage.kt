@@ -26,6 +26,10 @@ import com.example.androidfitnesstracker.User.UserActivityManager
 import com.example.androidfitnesstracker.User.UserDatabaseHelper
 import com.example.androidfitnesstracker.Workout.ExerciseStep
 import com.example.androidfitnesstracker.Workout.Workout
+import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.graphicsLayer
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 
 /* //Sample workout page
@@ -145,20 +149,118 @@ fun WorkoutListScreen(
     workouts: List<Workout>,
     onWorkoutClick: (Workout) -> Unit
 ) {
-    LazyColumn(
+    // State to control the rotation angle
+    val rotationAngle = remember { mutableFloatStateOf(0f) }
+
+    // State to track if the wheel is spinning
+    var isSpinning by remember { mutableStateOf(false) }
+
+    // Coroutine scope for animation
+    val coroutineScope = rememberCoroutineScope()
+
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .statusBarsPadding()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        items(workouts, key = { it.id }) { workout ->
-            WorkoutItem(
-                workout = workout,
-                onClick = { onWorkoutClick(workout) }
+        // Box to overlay the arrow and spinning wheel
+        Box(
+            modifier = Modifier.size(200.dp), // Match the size of the spinning wheel
+            contentAlignment = Alignment.Center
+        ) {
+            // Stationary Arrow
+            Image(
+                painter = painterResource(id = R.drawable.down_arrow), // Replace with your arrow resource
+                contentDescription = "Arrow",
+                modifier = Modifier
+                    .size(50.dp) // Adjust the size of the arrow to fit above the wheel
+                    .align(Alignment.TopCenter) // Ensure arrow stays at the top
             )
+
+            // Spinning Wheel with Padding
+            Image(
+                painter = painterResource(id = R.drawable.spin_wheel_2),
+                contentDescription = "Spinning Wheel",
+                modifier = Modifier
+                    .size(200.dp)
+                    .padding(top = 40.dp) // Add padding between the arrow and the wheel
+                    .graphicsLayer(rotationZ = rotationAngle.value) // Apply rotation
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Let the Wheel Decide Button
+        Button(
+            onClick = {
+                if (!isSpinning) {
+                    isSpinning = true
+                    coroutineScope.launch {
+                        spinWheelAndNavigate(workouts, onWorkoutClick, rotationAngle) {
+                            isSpinning = false // Reset spinning state after navigation
+                        }
+                    }
+                }
+            }
+        ) {
+            Text("LET THE WHEEL DECIDE YOUR FATE")
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // LazyColumn for the Workout List
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(workouts, key = { it.id }) { workout ->
+                WorkoutItem(
+                    workout = workout,
+                    onClick = { onWorkoutClick(workout) }
+                )
+            }
         }
     }
 }
+
+
+
+
+
+suspend fun spinWheelAndNavigate(
+    workouts: List<Workout>,
+    onWorkoutSelected: (Workout) -> Unit,
+    rotationAngle: MutableState<Float>, // Use MutableState<Float> here
+    onFinish: () -> Unit
+) {
+    // Simulate spinning animation
+    val randomAngle = (360 * 3) + (0..360).random() // At least 3 full rotations
+    val duration = 7000L // Total duration in milliseconds
+    val startTime = System.currentTimeMillis()
+
+    while (System.currentTimeMillis() - startTime < duration) {
+        val elapsedTime = System.currentTimeMillis() - startTime
+        val progress = elapsedTime / duration.toFloat()
+        val easedProgress = (1 - (1 - progress) * (1 - progress)) // Ease-out effect
+        rotationAngle.value = randomAngle * easedProgress
+        delay(16) // 16ms for smooth animation (~60fps)
+    }
+
+    // Finalize rotation
+    rotationAngle.value %= 360 // Normalize the angle
+
+    // Select a random workout
+    val randomWorkout = workouts.random()
+
+    // Navigate to the selected workout
+    onWorkoutSelected(randomWorkout)
+
+    // Call onFinish callback
+    onFinish()
+}
+
 
 
 @Composable

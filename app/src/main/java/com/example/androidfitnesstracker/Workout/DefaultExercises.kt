@@ -14,7 +14,6 @@ data class DefaultExercise(
     val distance: Float,
     val steps: Int,
     val instructions: List<ExerciseStepData> = emptyList(),
-    val animation: ((ImageView)->Unit)? = null
 )
 
 data class ExerciseStepData(
@@ -26,23 +25,6 @@ data class ExerciseStepData(
 val defaultExercises = listOf(
 
     DefaultExercise(
-        name = "RANDOM EXERCISES",
-        description = "THE SPINWHEEL WILL DETERMINE YOUR FATE",
-        imageResId = R.drawable.spin_wheel,
-        calories = 400,
-        duration = 30,
-        distance = 3.0f,
-        steps = 4500,
-        animation = { imageView ->
-            val spinAnimation = ObjectAnimator.ofFloat(imageView, "rotation", 0f, 360f)
-            spinAnimation.duration = 1000 // 1 second per rotation
-            spinAnimation.repeatCount = ObjectAnimator.INFINITE
-            spinAnimation.start()
-        }
-    ).also {
-        Log.d("Workout Retrieval", "Workout: ${it.name}, Image ID: ${it.imageResId}")
-    },
-    DefaultExercise(
         name = "Running",
         description = "Outdoor running on pavement, ideal for cardio and endurance.",
         imageResId = R.drawable.running_small,
@@ -50,7 +32,9 @@ val defaultExercises = listOf(
         duration = 30,
         distance = 3.0f,
         steps = 4500
-    ),
+    ).also {
+        Log.d("Workout Retrieval", "Workout: ${it.name}, Image ID: ${it.imageResId}")
+    },
     DefaultExercise(
         name = "Walking",
         description = "A brisk walk on a flat surface, perfect for light exercise and stress relief.",
