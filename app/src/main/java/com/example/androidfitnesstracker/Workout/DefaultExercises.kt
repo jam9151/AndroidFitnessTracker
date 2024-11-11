@@ -1,8 +1,6 @@
 package com.example.androidfitnesstracker.Workout
 
-import android.animation.ObjectAnimator
 import android.util.Log
-import android.widget.ImageView
 import com.example.androidfitnesstracker.R
 
 data class DefaultExercise(
@@ -62,11 +60,31 @@ val defaultExercises = listOf(
         distance = 0f,
         steps = 0,
         instructions = listOf(
-            ExerciseStepData(1, "Mountain Pose - Hold for 1 minute. A grounding posture to start the session.", null),
-            ExerciseStepData(2, "Downward Dog - Hold for 1 minute. Stretches the hamstrings and calves.", null),
-            ExerciseStepData(3, "Warrior Pose - Hold for 2 minutes. Builds strength in legs and improves balance.", null),
-            ExerciseStepData(4, "Child's Pose - Hold for 1 minute. A resting pose for relaxation.", null),
-            ExerciseStepData(5, "Corpse Pose - Hold for 3 minutes. Focuses on deep relaxation and breathing.", null)
+            ExerciseStepData(
+                1,
+                "Mountain Pose - Hold for 1 minute. A grounding posture to start the session.",
+                null
+            ),
+            ExerciseStepData(
+                2,
+                "Downward Dog - Hold for 1 minute. Stretches the hamstrings and calves.",
+                null
+            ),
+            ExerciseStepData(
+                3,
+                "Warrior Pose - Hold for 2 minutes. Builds strength in legs and improves balance.",
+                null
+            ),
+            ExerciseStepData(
+                4,
+                "Child's Pose - Hold for 1 minute. A resting pose for relaxation.",
+                null
+            ),
+            ExerciseStepData(
+                5,
+                "Corpse Pose - Hold for 3 minutes. Focuses on deep relaxation and breathing.",
+                null
+            )
         )
     ),
     DefaultExercise(

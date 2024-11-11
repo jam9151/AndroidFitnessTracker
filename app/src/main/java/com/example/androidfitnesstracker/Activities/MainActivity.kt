@@ -11,7 +11,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.androidfitnesstracker.Pages.LeaderboardPage
 import com.example.androidfitnesstracker.Pages.MainPage
-import com.example.androidfitnesstracker.Pages.MealPlanPage
+import com.example.androidfitnesstracker.Pages.MealCreationPage
+import com.example.androidfitnesstracker.Pages.MealDetailScreen
+import com.example.androidfitnesstracker.Pages.MealListScreen
 import com.example.androidfitnesstracker.Pages.MySubscriptionPage
 import com.example.androidfitnesstracker.Pages.StatsPage
 import com.example.androidfitnesstracker.Pages.UpgradePage
@@ -34,6 +36,7 @@ class MainActivity : ComponentActivity() {
             sessionManager)
         val dbHelper = UserDatabaseHelper.getInstance(this)
         dbHelper.initializeBasicExercises() // Initialize default exercises
+        dbHelper.initializeBasicMeals() // Initialize default exercises
 
         enableEdgeToEdge()
         setContent {
@@ -54,7 +57,6 @@ class MainActivity : ComponentActivity() {
                         dbHelper = dbHelper,
                         sessionManager = sessionManager
                         ) }
-                    composable("mealPlan") { MealPlanPage(navController) }
                     composable("leaderboardPage") { LeaderboardPage(navController) }
 
                     composable("workoutList") {
@@ -67,15 +69,14 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    composable("mySubscription") {
-                        MySubscriptionPage(
-                            dbHelper = dbHelper,
-                            sessionManager = sessionManager,
-                            onUpgradeClick = { navController.navigate("upgradePage") }
-                        )
+                    composable("mealPlan") {
+                        MealListScreen(
+                            meals = dbHelper.getAllMeals(),
+                            onMealClick = {meal ->
+                                navController.navigate("mealDetail/${meal.id}")
+                            },
+                            onAddMealClick = { navController.navigate(("mealCreationPage"))})
                     }
-
-
                     composable(
                         route = "workoutDetail/{workoutId}",
                         arguments = listOf(navArgument("workoutId") { type = NavType.IntType })
@@ -83,6 +84,23 @@ class MainActivity : ComponentActivity() {
                         val workoutId = backStackEntry.arguments?.getInt("workoutId") ?: return@composable
                         WorkoutDetailScreen(workoutId = workoutId,userActivityManager = userActivityManager)
                     }
+
+                    composable("mySubscription") {
+                        MySubscriptionPage(
+                            dbHelper = dbHelper,
+                            sessionManager = sessionManager,
+                            onUpgradeClick = { navController.navigate("upgradePage") }
+                        )
+                    }
+                    composable(
+                        route = "mealDetail/{mealId}",
+                        arguments = listOf(navArgument("mealId") { type = NavType.IntType })
+                    ) { backStackEntry ->
+                        val mealId = backStackEntry.arguments?.getInt("mealId") ?: return@composable
+                        MealDetailScreen(mealId = mealId,userActivityManager = userActivityManager)
+                    }
+
+
 
                     composable("upgradePage") {
                         UpgradePage(
@@ -98,6 +116,13 @@ class MainActivity : ComponentActivity() {
                         WorkoutCreationPage(
                             dbHelper = dbHelper,
                             onSave = {navController.navigate("workoutList")}
+                        )
+                    }
+
+                    composable("mealCreationPage") {
+                        MealCreationPage(
+                            dbHelper = dbHelper,
+                            onSave = {navController.navigate("mealPlan")}
                         )
                     }
                 }

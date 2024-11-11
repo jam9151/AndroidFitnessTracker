@@ -5,11 +5,14 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
+import com.example.androidfitnesstracker.Meal.Meal
+import com.example.androidfitnesstracker.Meal.MealStep
 import com.example.androidfitnesstracker.Workout.ExerciseStep
 import com.example.androidfitnesstracker.Membership.MembershipType
 import com.example.androidfitnesstracker.Membership.SubscriptionStatus
 import com.example.androidfitnesstracker.Workout.Workout
 import com.example.androidfitnesstracker.Workout.DailySummary
+import com.example.androidfitnesstracker.Meal.defaultMeals
 import com.example.androidfitnesstracker.Workout.defaultExercises
 import java.util.Calendar
 import java.util.Locale
@@ -20,7 +23,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         // Main user table
         private const val DATABASE_NAME = "User.db"
 
-        private const val DATABASE_VERSION = 22  // Incremented version for new schema
+        private const val DATABASE_VERSION = 23  // Incremented version for new schema
         private const val TABLE_USERS = "users"
         private const val COLUMN_ID = "id"
         private const val COLUMN_USERNAME = "username"
@@ -69,6 +72,22 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         private const val COLUMN_STEP_NUMBER = "step_number"
         private const val COLUMN_STEP_DESCRIPTION = "description"
         private const val COLUMN_STEP_IMAGE = "image"
+
+        // Meals Tables
+        private const val TABLE_MEALS = "meals"
+        private const val COLUMN_MEAL_ID = "id"
+        private const val COLUMN_MEAL_NAME = "name"
+        private const val COLUMN_MEAL_DESCRIPTION = "description"
+        private const val COLUMN_MEAL_COVER_IMAGE = "cover_image"
+        private const val COLUMN_MEAL_CALORIES = "calories"
+
+        // Meal Steps Table
+        private const val TABLE_MEAL_STEPS = "meal_steps"
+        private const val COLUMN_MEAL_STEP_ID = "id"
+        private const val COLUMN_MEAL_STEP_MEAL_ID = "meal_id"
+        private const val COLUMN_MEAL_STEP_NUMBER = "step_number"
+        private const val COLUMN_MEAL_STEP_DESCRIPTION = "description"
+        private const val COLUMN_MEAL_STEP_IMAGE = "image"
 
 
         // Create Singleton instance
@@ -159,6 +178,31 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
             )
         """
             db.execSQL(insertGuestUser)
+
+            // Create the meals table
+            val createMealsTable = """
+CREATE TABLE IF NOT EXISTS $TABLE_MEALS (
+    $COLUMN_MEAL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    $COLUMN_MEAL_NAME TEXT NOT NULL,
+    $COLUMN_MEAL_DESCRIPTION TEXT,
+    $COLUMN_MEAL_COVER_IMAGE INTEGER,
+    $COLUMN_MEAL_CALORIES INTEGER
+)
+"""
+            db.execSQL(createMealsTable)
+
+// Create the meal steps table
+            val createMealStepsTable = """
+CREATE TABLE IF NOT EXISTS $TABLE_MEAL_STEPS (
+    $COLUMN_MEAL_STEP_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    $COLUMN_MEAL_STEP_MEAL_ID INTEGER NOT NULL,
+    $COLUMN_MEAL_STEP_NUMBER INTEGER NOT NULL,
+    $COLUMN_MEAL_STEP_DESCRIPTION TEXT NOT NULL,
+    $COLUMN_MEAL_STEP_IMAGE INTEGER,
+    FOREIGN KEY ($COLUMN_MEAL_STEP_MEAL_ID) REFERENCES $TABLE_MEALS($COLUMN_MEAL_ID) ON DELETE CASCADE
+)
+"""
+            db.execSQL(createMealStepsTable)
         } catch (e: Exception) {
             Log.e("DatabaseError", "Error creating tables: ${e.message}")
         }
@@ -169,6 +213,9 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         db.execSQL("DROP TABLE IF EXISTS $TABLE_USER_ACTIVITY") // Drop other tables if needed
         db.execSQL("DROP TABLE IF EXISTS $TABLE_WORKOUTS")
         db.execSQL("DROP TABLE IF EXISTS $TABLE_EXERCISE_STEPS")
+        db.execSQL("DROP TABLE IF EXISTS $TABLE_MEALS")
+        db.execSQL("DROP TABLE IF EXISTS $TABLE_MEAL_STEPS")
+
         onCreate(db)  // Recreate with updated schema
     }
 
@@ -912,5 +959,116 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         // Fill missing months with default values
         return data + List(12 - data.size) { Triple(0f, 0, 0f) }
     }
+
+    private fun insertMeal(
+        name: String,
+        description: String,
+        coverImage: Int?,
+        calories: Int
+    ): Long {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(COLUMN_MEAL_NAME, name)
+            put(COLUMN_MEAL_DESCRIPTION, description)
+            put(COLUMN_MEAL_COVER_IMAGE, coverImage)
+            put(COLUMN_MEAL_CALORIES, calories)
+        }
+        return db.insert(TABLE_MEALS, null, values)
+    }
+
+    fun insertMealStep(mealId: Long, stepNumber: Int, description: String, image: Int?) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(COLUMN_MEAL_STEP_MEAL_ID, mealId)
+            put(COLUMN_MEAL_STEP_NUMBER, stepNumber)
+            put(COLUMN_MEAL_STEP_DESCRIPTION, description)
+            image?.let { put(COLUMN_MEAL_STEP_IMAGE, it) }
+        }
+        db.insert(TABLE_MEAL_STEPS, null, values)
+    }
+
+    fun insertMealIfNotExists(
+        name: String,
+        description: String,
+        coverImage: Int?,
+        calories: Int
+    ): Long? {
+        val db = writableDatabase
+        val cursor = db.rawQuery(
+            "SELECT $COLUMN_MEAL_ID FROM $TABLE_MEALS WHERE $COLUMN_MEAL_NAME = ?",
+            arrayOf(name)
+        )
+        val exists = cursor.moveToFirst()
+        cursor.close()
+
+        return if (!exists) {
+            insertMeal(name, description, coverImage, calories)
+        } else {
+            null // Return null if the meal already exists
+        }
+    }
+
+    fun getAllMeals(): List<Meal> {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT * FROM $TABLE_MEALS", null)
+        val meals = mutableListOf<Meal>()
+
+        while (cursor.moveToNext()) {
+            val meal = Meal(
+                id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_MEAL_ID)),
+                name = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_MEAL_NAME)),
+                description = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_MEAL_DESCRIPTION)),
+                coverImage = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_MEAL_COVER_IMAGE)).takeIf { it != 0 },
+                calories = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_MEAL_CALORIES)),
+                instructions = getMealSteps(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_MEAL_ID)))
+            )
+            meals.add(meal)
+        }
+        cursor.close()
+        return meals
+    }
+
+    fun getMealSteps(mealId: Int): List<MealStep> {
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT * FROM $TABLE_MEAL_STEPS WHERE $COLUMN_MEAL_STEP_MEAL_ID = ? ORDER BY $COLUMN_MEAL_STEP_NUMBER",
+            arrayOf(mealId.toString())
+        )
+        val steps = mutableListOf<MealStep>()
+
+        while (cursor.moveToNext()) {
+            val step = MealStep(
+                stepNumber = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_MEAL_STEP_NUMBER)),
+                description = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_MEAL_STEP_DESCRIPTION)),
+                image = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_MEAL_STEP_IMAGE)).takeIf { it != 0 }
+            )
+            steps.add(step)
+        }
+        cursor.close()
+        return steps
+    }
+
+    fun initializeBasicMeals() {
+        defaultMeals.forEach { meal ->
+            val mealId = insertMealIfNotExists(
+                name = meal.name,
+                description = meal.description,
+                coverImage = meal.coverImage,
+                calories = meal.calories
+            )
+
+            if (mealId != null) {
+                meal.instructions.forEach { step ->
+                    insertMealStep(
+                        mealId = mealId,
+                        stepNumber = step.stepNumber,
+                        description = step.description,
+                        image = step.image
+                    )
+                }
+            }
+        }
+    }
+
 }
 

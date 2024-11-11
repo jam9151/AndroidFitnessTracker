@@ -1,6 +1,7 @@
 package com.example.androidfitnesstracker.User
 
 import android.util.Log
+import com.example.androidfitnesstracker.Meal.Meal
 import com.example.androidfitnesstracker.Workout.Workout
 import com.example.androidfitnesstracker.Workout.DailySummary
 
@@ -9,7 +10,7 @@ class UserActivityManager(
     private val sessionManager: UserSessionManager // Added sessionManager for user ID retrieval
 ) {
 
-    fun addActivityRecord(userId: Int, timestamp: Long, steps: Int, calories: Int, distance: Float): Long {
+    private fun addActivityRecord(userId: Int, timestamp: Long, steps: Int, calories: Int, distance: Float): Long {
         return dbHelper.insertActivityRecord(userId, timestamp, steps, calories, distance)
     }
 
@@ -28,6 +29,10 @@ class UserActivityManager(
         // Insert the workout activity for the current day
         addActivityRecord(userId, timestamp, steps, calories, distance)
         Log.d("DatabaseInsert", "Logged workout with calories: ${workout.calories} and this timestamp: $timestamp")
+    }
+
+    fun logMealCompletion(it: Meal) {
+        //TODO - give user points or something
     }
 
 
