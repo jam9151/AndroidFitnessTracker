@@ -15,6 +15,7 @@ import com.example.androidfitnesstracker.Pages.MealPlanPage
 import com.example.androidfitnesstracker.Pages.MySubscriptionPage
 import com.example.androidfitnesstracker.Pages.StatsPage
 import com.example.androidfitnesstracker.Pages.UpgradePage
+import com.example.androidfitnesstracker.Pages.WorkoutCreationPage
 import com.example.androidfitnesstracker.User.UserActivityManager
 import com.example.androidfitnesstracker.User.UserDatabaseHelper
 import com.example.androidfitnesstracker.User.UserSessionManager
@@ -61,7 +62,8 @@ class MainActivity : ComponentActivity() {
                             workouts = dbHelper.getAllWorkouts(),
                             onWorkoutClick = { workout ->
                                 navController.navigate("workoutDetail/${workout.id}")
-                            }
+                            },
+                            onAddWorkoutClick = {navController.navigate(("workoutCreationPage"))}
                         )
                     }
 
@@ -89,6 +91,13 @@ class MainActivity : ComponentActivity() {
                             onUpgradeSuccess = {
                                 navController.navigate("mySubscription")
                             }
+                        )
+                    }
+
+                    composable("workoutCreationPage") {
+                        WorkoutCreationPage(
+                            dbHelper = dbHelper,
+                            onSave = {navController.navigate("workoutList")}
                         )
                     }
                 }

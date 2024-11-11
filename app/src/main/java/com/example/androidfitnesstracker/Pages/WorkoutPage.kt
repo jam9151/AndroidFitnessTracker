@@ -1,12 +1,14 @@
 package com.example.androidfitnesstracker.Pages
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -217,7 +219,8 @@ fun WorkoutItem(
 @Composable
 fun WorkoutListScreen(
     workouts: List<Workout>,
-    onWorkoutClick: (Workout) -> Unit
+    onWorkoutClick: (Workout) -> Unit,
+    onAddWorkoutClick: () -> Unit
 ) {
     // State to control the rotation angle
     val rotationAngle = remember { mutableFloatStateOf(0f) }
@@ -290,6 +293,31 @@ fun WorkoutListScreen(
                     workout = workout,
                     onClick = { onWorkoutClick(workout) }
                 )
+            }
+
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp) // Add spacing above and below the button
+                        .align(Alignment.CenterHorizontally), // Horizontally center the button
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp) // Set the size of the circle
+                            .clip(CircleShape)
+                            .background(Color(0xFF4CAF50)) // Green background
+                            .clickable { onAddWorkoutClick() }, // Click handler for navigation
+                        contentAlignment = Alignment.Center // Center the "+" symbol
+                    ) {
+                        Text(
+                            text = "+",
+                            style = MaterialTheme.typography.displayMedium, // Adjust text size
+                            color = Color.White
+                        )
+                    }
+                }
             }
         }
     }

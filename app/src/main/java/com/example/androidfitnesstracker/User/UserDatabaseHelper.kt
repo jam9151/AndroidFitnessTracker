@@ -639,7 +639,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     }
 
 
-    fun insertWorkout(
+    private fun insertWorkout(
         name: String,
         description: String,
         coverImage: Int,
@@ -714,7 +714,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         return steps
     }
 
-    private fun insertWorkoutIfNotExists(
+    fun insertWorkoutIfNotExists(
         name: String,
         description: String,
         coverImage: Int,
