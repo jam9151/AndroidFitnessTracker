@@ -20,7 +20,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         // Main user table
         private const val DATABASE_NAME = "User.db"
 
-        private const val DATABASE_VERSION = 19  // Incremented version for new schema
+        private const val DATABASE_VERSION = 20  // Incremented version for new schema
         private const val TABLE_USERS = "users"
         private const val COLUMN_ID = "id"
         private const val COLUMN_USERNAME = "username"
