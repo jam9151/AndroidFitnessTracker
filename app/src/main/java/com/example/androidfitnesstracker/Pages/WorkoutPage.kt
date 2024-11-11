@@ -59,12 +59,78 @@ fun WorkoutDetailScreen(workoutId: Int, userActivityManager: UserActivityManager
     val workout = dbHelper.getAllWorkouts().firstOrNull { it.id == workoutId }
     val steps = dbHelper.getExerciseSteps(workoutId)
 
+    // Timer state
+    var timerRunning by remember { mutableStateOf(false) }
+    var timeElapsed by remember { mutableStateOf(0L) } // Time in milliseconds
+
+    // Update timer every 10 milliseconds when running
+    LaunchedEffect(timerRunning) {
+        if (timerRunning) {
+            while (timerRunning) {
+                kotlinx.coroutines.delay(10L)
+                timeElapsed += 10
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
             .statusBarsPadding()
     ) {
+        // Timer section
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Calculate hours, minutes, seconds, and milliseconds
+            val hours = timeElapsed / 3_600_000
+            val minutes = (timeElapsed % 3_600_000) / 60_000
+            val seconds = (timeElapsed % 60_000) / 1_000
+            val milliseconds = (timeElapsed % 1_000) / 10
+
+            Text(
+                text = String.format(
+                    "Time: %02d:%02d:%02d.%02d",
+                    hours, minutes, seconds, milliseconds
+                ),
+                style = MaterialTheme.typography.displayMedium, // Larger text style
+
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = { timerRunning = true },
+                    enabled = !timerRunning
+                ) {
+                    Text("Start")
+                }
+                Button(
+                    onClick = { timerRunning = false },
+                    enabled = timerRunning
+                ) {
+                    Text("Stop")
+                }
+                Button(
+                    onClick = {
+                        timerRunning = false
+                        timeElapsed = 0L
+                    }
+                ) {
+                    Text("Reset")
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Workout details
         Text(
             text = workout?.name ?: "Workout",
             style = MaterialTheme.typography.titleLarge
@@ -84,10 +150,13 @@ fun WorkoutDetailScreen(workoutId: Int, userActivityManager: UserActivityManager
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))  // Pushes button to the bottom
+        Spacer(modifier = Modifier.weight(1f)) // Pushes button to the bottom
         workout?.let {
             Button(
-                onClick = { userActivityManager.logWorkoutCompletion(it) },
+                onClick = {
+                    timerRunning = false // Stop timer on completion
+                    userActivityManager.logWorkoutCompletion(it)
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Complete Workout")
@@ -95,6 +164,7 @@ fun WorkoutDetailScreen(workoutId: Int, userActivityManager: UserActivityManager
         }
     }
 }
+
 
 @Composable
 fun WorkoutItem(
