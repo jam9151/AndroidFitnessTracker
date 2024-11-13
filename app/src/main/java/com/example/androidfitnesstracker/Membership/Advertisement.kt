@@ -7,7 +7,8 @@ import com.example.androidfitnesstracker.R
 data class Advertisement(
     @DrawableRes val imageResId: Int,
     val description: String,
-    val price: String
+    val price: String,
+    val url: String
 )
 
 fun getRandomAdvertisement(context: Context): Advertisement {
@@ -30,6 +31,7 @@ fun getRandomAdvertisement(context: Context): Advertisement {
     // Assume first line is description, second line is price
     val description = lines.getOrNull(0) ?: "Description not available"
     val price = lines.getOrNull(1) ?: "0.00"
+    val url = lines.getOrNull(2) ?: "https://www.amazon.com/"
 
-    return Advertisement(imageResId, description, price)
+    return Advertisement(imageResId, description, price, url)
 }
