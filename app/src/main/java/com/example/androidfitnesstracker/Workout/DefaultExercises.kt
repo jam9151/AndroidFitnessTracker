@@ -29,7 +29,8 @@ val defaultExercises = listOf(
         calories = 400,
         duration = 30,
         distance = 3.0f,
-        steps = 4500
+        steps = 4500,
+        instructions = listOf(ExerciseStepData(stepNumber = 1, description = "Go fast to keep a steady fast heart rate", image = R.drawable.running_man))
     ).also {
         Log.d("Workout Retrieval", "Workout: ${it.name}, Image ID: ${it.imageResId}")
     },
