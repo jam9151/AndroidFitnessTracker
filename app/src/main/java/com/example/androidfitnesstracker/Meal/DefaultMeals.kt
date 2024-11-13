@@ -17,7 +17,7 @@ val defaultMeals = listOf(
     DefaultMeal(
         name = "Grilled Chicken Salad",
         description = "A healthy salad with grilled chicken, mixed greens, and a light vinaigrette.",
-        coverImage = null,
+        coverImage = R.drawable.grilled_chicken,
         calories = 350,
         instructions = listOf(
             MealStep(1, "Prepare the mixed greens in a large bowl.", null),
@@ -31,7 +31,7 @@ val defaultMeals = listOf(
     DefaultMeal(
         name = "Pasta Primavera",
         description = "A classic Italian dish with pasta and fresh vegetables in a light sauce.",
-        coverImage = null,
+        coverImage = R.drawable.pasta_primavera,
         calories = 450,
         instructions = listOf(
             MealStep(1, "Cook pasta according to package instructions and set aside.", null),
@@ -45,7 +45,7 @@ val defaultMeals = listOf(
     DefaultMeal(
         name = "Avocado Toast",
         description = "A simple and nutritious meal with smashed avocado on toasted bread.",
-        coverImage = null,
+        coverImage = R.drawable.avacado_toast,
         calories = 250,
         instructions = listOf(
             MealStep(1, "Toast slices of whole-grain bread until golden brown.", null),
@@ -59,7 +59,7 @@ val defaultMeals = listOf(
     DefaultMeal(
         name = "Smoothie Bowl",
         description = "A refreshing smoothie bowl topped with fruits, granola, and seeds.",
-        coverImage = null,
+        coverImage = R.drawable.smoothie_bowl,
         calories = 300,
         instructions = listOf(
             MealStep(1, "Blend frozen berries, a banana, and almond milk until smooth.", null),
@@ -73,7 +73,7 @@ val defaultMeals = listOf(
     DefaultMeal(
         name = "Vegetable Stir-Fry",
         description = "A quick and colorful vegetable stir-fry served with steamed rice.",
-        coverImage = null,
+        coverImage = R.drawable.vegetable_stirfry,
         calories = 400,
         instructions = listOf(
             MealStep(1, "Cook rice according to package instructions and set aside.", null),
@@ -87,7 +87,7 @@ val defaultMeals = listOf(
     DefaultMeal(
         name = "Quinoa Buddha Bowl",
         description = "A balanced meal with quinoa, roasted vegetables, and a creamy tahini dressing.",
-        coverImage = null, // Replace with your drawable resource
+        coverImage = R.drawable.quinoa_bowl, // Replace with your drawable resource
         calories = 450,
         instructions = listOf(
             MealStep(1, "Cook quinoa according to package instructions and set aside.", null),
@@ -101,7 +101,7 @@ val defaultMeals = listOf(
     DefaultMeal(
         name = "Veggie Wrap",
         description = "A quick and easy wrap with fresh vegetables and hummus.",
-        coverImage = null,
+        coverImage = R.drawable.veggie_wrap,
         calories = 300,
         instructions = listOf(
             MealStep(1, "Spread a generous amount of hummus onto a whole-wheat tortilla.", null),
@@ -115,7 +115,7 @@ val defaultMeals = listOf(
     DefaultMeal(
         name = "Turkey and Cheese Panini",
         description = "A warm panini with turkey, cheese, and a touch of pesto.",
-        coverImage = null,
+        coverImage = R.drawable.turkey_panini,
         calories = 400,
         instructions = listOf(
             MealStep(1, "Spread pesto on one side of two slices of sourdough bread.", null),
@@ -129,7 +129,7 @@ val defaultMeals = listOf(
     DefaultMeal(
         name = "Stuffed Bell Peppers",
         description = "Bell peppers stuffed with a savory mix of rice, beans, and spices.",
-        coverImage = null,
+        coverImage = R.drawable.stuffed_bell_peppers,
         calories = 380,
         instructions = listOf(
             MealStep(1, "Cut the tops off bell peppers and remove the seeds.", null),
@@ -143,7 +143,7 @@ val defaultMeals = listOf(
     DefaultMeal(
         name = "Overnight Oats",
         description = "A no-cook oatmeal recipe prepared the night before for a quick breakfast.",
-        coverImage = null,
+        coverImage = R.drawable.overnight_oats,
         calories = 250,
         instructions = listOf(
             MealStep(1, "Combine oats, milk (or plant-based milk), and a pinch of cinnamon in a jar.", null),
