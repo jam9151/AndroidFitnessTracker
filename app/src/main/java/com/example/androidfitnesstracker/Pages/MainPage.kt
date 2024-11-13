@@ -1,6 +1,7 @@
 package com.example.androidfitnesstracker.Pages
 
 import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
@@ -12,7 +13,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -172,7 +172,6 @@ fun MainPage(
             }
 
             // Stats Section
-            // Stats Section
             item {
                 Box(
                     modifier = Modifier
@@ -212,20 +211,16 @@ fun MainPage(
                 DualEncapsulatedSection(
                     leftSection = {
                         SquareEncapsulatedSection(
-                            title = if (dbHelper.getSubscriptionStatus(userId) == SubscriptionStatus.FREE) "Upgrade" else "My Diet",
+                            title = if (dbHelper.getSubscriptionStatus(userId) == SubscriptionStatus.FREE) "Upgrade" else "My Subscription",
                             onClick = {
-                                if (dbHelper.getSubscriptionStatus(userId) == SubscriptionStatus.FREE) {
-                                    navController.navigate("mySubscription")
-                                } else {
-                                    navController.navigate("mealPlan")
-                                }
+                                navController.navigate("mySubscription")
                             }
                         ) {
                             Text(
                                 text = if (dbHelper.getSubscriptionStatus(userId) == SubscriptionStatus.FREE)
                                     "Upgrade to Premium for Customized Diet Plans"
                                 else
-                                    "View My Diet Plan",
+                                    "Manage my Subscription",
                                 color = Color.Black
                             )
                         }
@@ -234,70 +229,93 @@ fun MainPage(
                         val advertisement = remember { getRandomAdvertisement(context) }
 
                         SquareEncapsulatedSection(
-                            title = "",
-                            onClick = {
-                                // Define action for right section
-                            },
-                            padding = 2
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .aspectRatio(1f)  // Keep square shape
-                                    .clip(RoundedCornerShape(8.dp))  // Optional rounding for aesthetics
-                                    .padding(0.dp)  // Slight padding to reduce the border effect
-                            ) {
-                                Image(
-                                    painter = painterResource(id = advertisement.imageResId),
-                                    contentDescription = "Advertisement",
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                                // Overlay for description and price at the top-right corner
-                                Column(
-                                    modifier = Modifier
-                                        .align(Alignment.TopStart)
-                                        .padding(2.dp) // Padding around the Column itself
-                                ) {
-                                    // Box for the description
-                                    Box(
-                                        modifier = Modifier
-                                            .background(
-                                                Color.Black.copy(alpha = 0.7f),
-                                                shape = RoundedCornerShape(4.dp)
-                                            )
-                                            .padding(horizontal = 8.dp, vertical = 4.dp) // Padding inside the text box
-                                    ) {
-                                        Text(
-                                            text = advertisement.description,
-                                            color = Color.White,
-                                            fontSize = 14.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            maxLines = 1, // Limit to 1 line
-                                            overflow = TextOverflow.Ellipsis // Add ellipsis if text overflows
-                                        )
+                            title = if (dbHelper.getSubscriptionStatus(userId) == SubscriptionStatus.FREE) "" else "My Meals",
+                            onClick = { if (dbHelper.getSubscriptionStatus(userId) == SubscriptionStatus.FREE) {
+                                //open ad
+                                advertisement.url?.takeIf { it.isNotBlank() }?.let { url ->
+                                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                                        data = Uri.parse(url)
                                     }
-
-                                    Spacer(modifier = Modifier.height(6.dp)) // Spacing between blocks
-
-                                    // Box for the price
-                                    Box(
+                                    context.startActivity(intent)
+                                } ?: Log.e("AdClick", "Invalid URL")
+                            } else {
+                                navController.navigate("mealPlan")
+                            } },
+                            padding = if (dbHelper.getSubscriptionStatus(userId) == SubscriptionStatus.FREE) 2 else 16
+                        ) {
+                            if (dbHelper.getSubscriptionStatus(userId) == SubscriptionStatus.FREE) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .aspectRatio(1f)  // Keep square shape
+                                        .clip(RoundedCornerShape(8.dp))  // Optional rounding for aesthetics
+                                        .padding(0.dp)  // Slight padding to reduce the border effect
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = advertisement.imageResId),
+                                        contentDescription = "Advertisement",
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                    // Overlay for description and price at the top-right corner
+                                    Column(
                                         modifier = Modifier
-                                            .background(
-                                                Color.Black.copy(alpha = 0.7f),
-                                                shape = RoundedCornerShape(4.dp)
-                                            )
-                                            .padding(horizontal = 8.dp, vertical = 4.dp) // Padding inside the text box
+                                            .align(Alignment.TopStart)
+                                            .padding(2.dp) // Padding around the Column itself
                                     ) {
-                                        Text(
-                                            text = "$${advertisement.price}",
-                                            color = Color.White,
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Normal,
-                                            maxLines = 1, // Limit to 1 line
-                                            overflow = TextOverflow.Ellipsis // Add ellipsis if text overflows
-                                        )
+                                        // Box for the description
+                                        Box(
+                                            modifier = Modifier
+                                                .background(
+                                                    Color.Black.copy(alpha = 0.7f),
+                                                    shape = RoundedCornerShape(4.dp)
+                                                )
+                                                .padding(
+                                                    horizontal = 8.dp,
+                                                    vertical = 4.dp
+                                                ) // Padding inside the text box
+                                        ) {
+                                            Text(
+                                                text = advertisement.description,
+                                                color = Color.White,
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1, // Limit to 1 line
+                                                overflow = TextOverflow.Ellipsis // Add ellipsis if text overflows
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.height(6.dp)) // Spacing between blocks
+
+                                        // Box for the price
+                                        Box(
+                                            modifier = Modifier
+                                                .background(
+                                                    Color.Black.copy(alpha = 0.7f),
+                                                    shape = RoundedCornerShape(4.dp)
+                                                )
+                                                .padding(
+                                                    horizontal = 8.dp,
+                                                    vertical = 4.dp
+                                                ) // Padding inside the text box
+                                        ) {
+                                            Text(
+                                                text = "$${advertisement.price}",
+                                                color = Color.White,
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Normal,
+                                                maxLines = 1, // Limit to 1 line
+                                                overflow = TextOverflow.Ellipsis // Add ellipsis if text overflows
+                                            )
+                                        }
                                     }
                                 }
+                            }
+                            else
+                            {
+                                Text(
+                                    text = "View and Customize Your Meals!",
+                                    color = Color.Black
+                                )
                             }
                         }
                     }
