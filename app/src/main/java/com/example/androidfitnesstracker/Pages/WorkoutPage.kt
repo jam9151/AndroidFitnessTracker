@@ -248,7 +248,7 @@ fun WorkoutListScreen(
                 painter = painterResource(id = R.drawable.down_arrow), // Replace with your arrow resource
                 contentDescription = "Arrow",
                 modifier = Modifier
-                    .size(50.dp) // Adjust the size of the arrow to fit above the wheel
+                    .size(40.dp) // Adjust the size of the arrow to fit above the wheel
                     .align(Alignment.TopCenter) // Ensure arrow stays at the top
             )
 
