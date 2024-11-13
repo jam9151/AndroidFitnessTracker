@@ -53,11 +53,12 @@ class MainActivity : ComponentActivity() {
                             dbHelper = dbHelper
                         )
                     }
+
                     composable("statsPage") { StatsPage(
                         dbHelper = dbHelper,
                         sessionManager = sessionManager
-                        ) }
-                    composable("leaderboardPage") { LeaderboardPage(navController) }
+                        )
+                    }
 
                     composable("workoutList") {
                         WorkoutListScreen(

@@ -5,6 +5,7 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
+import com.example.androidfitnesstracker.Auth.AuthManager
 import com.example.androidfitnesstracker.Meal.Meal
 import com.example.androidfitnesstracker.Meal.MealStep
 import com.example.androidfitnesstracker.Workout.ExerciseStep
@@ -14,6 +15,7 @@ import com.example.androidfitnesstracker.Workout.Workout
 import com.example.androidfitnesstracker.Workout.DailySummary
 import com.example.androidfitnesstracker.Meal.defaultMeals
 import com.example.androidfitnesstracker.Workout.defaultExercises
+import java.security.MessageDigest
 import java.util.Calendar
 import java.util.Locale
 
@@ -23,7 +25,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         // Main user table
         private const val DATABASE_NAME = "User.db"
 
-        private const val DATABASE_VERSION = 28  // Incremented version for new schema
+        private const val DATABASE_VERSION = 41
         private const val TABLE_USERS = "users"
         private const val COLUMN_ID = "id"
         private const val COLUMN_USERNAME = "username"
@@ -96,7 +98,10 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
 
         fun getInstance(context: Context): UserDatabaseHelper {
             return instance ?: synchronized(this) {
-                instance ?: UserDatabaseHelper(context.applicationContext).also { instance = it }
+                instance ?: UserDatabaseHelper(context.applicationContext).also { dbHelper ->
+                    dbHelper.initializeDataIfNeeded() // Initialize data here
+                    instance = dbHelper
+                }
             }
         }
     }
@@ -120,7 +125,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
                 $COLUMN_SUBSCRIPTION_STATUS TEXT,
                 $COLUMN_GOAL_CALORIES INTEGER DEFAULT 2000,
                 $COLUMN_GOAL_WEIGHT INTEGER DEFAULT 0,
-                $COLUMN_GOAL_STEPS INTEGER DEFAULT 2000,
+                $COLUMN_GOAL_STEPS INTEGER DEFAULT 8000,
                 $COLUMN_GOAL_DISTANCE REAL DEFAULT 0
             )
         """
@@ -203,7 +208,14 @@ CREATE TABLE IF NOT EXISTS $TABLE_MEAL_STEPS (
 )
 """
             db.execSQL(createMealStepsTable)
-        } catch (e: Exception) {
+
+            //val sampleUser = SampleUser()
+            //val sampleUserID = addSampleUser(db, sampleUser)
+            //sampleUserID?.let { generateHistoricalData(it, this) }
+
+
+
+    } catch (e: Exception) {
             Log.e("DatabaseError", "Error creating tables: ${e.message}")
         }
     }
@@ -653,7 +665,7 @@ CREATE TABLE IF NOT EXISTS $TABLE_MEAL_STEPS (
         val cursor = db.rawQuery("SELECT $COLUMN_GOAL_STEPS FROM $TABLE_USERS WHERE $COLUMN_ID = ?", arrayOf(userId.toString()))
         val goalSteps = if (cursor.moveToFirst()) cursor.getInt(cursor.getColumnIndexOrThrow(
             COLUMN_GOAL_STEPS
-        )) else 2000
+        )) else 8000
         cursor.close()
         return goalSteps
     }
@@ -1069,6 +1081,55 @@ CREATE TABLE IF NOT EXISTS $TABLE_MEAL_STEPS (
             }
         }
     }
+
+    private fun addSampleUser(sampleUser: SampleUser): Int? {
+        val db = writableDatabase
+        val bytes = MessageDigest.getInstance("SHA-256").digest(sampleUser.password.toByteArray())
+        val hashedPassword =  bytes.joinToString("") { "%02x".format(it) }
+
+        val values = ContentValues().apply {
+            put(COLUMN_USERNAME, sampleUser.username)
+            put(COLUMN_PASSWORD, hashedPassword)
+            put(COLUMN_EMAIL, sampleUser.email)
+            put(COLUMN_FIRST_NAME, sampleUser.firstName)
+            put(COLUMN_LAST_NAME, sampleUser.lastName)
+            put(COLUMN_SUBSCRIPTION_STATUS, sampleUser.subscriptionStatus.value)
+        }
+
+        val rowId = db.insert(TABLE_USERS, null, values)
+        // Safely convert Long to Int if within the range of Int
+        Log.d("DatabaseInit", "Sample user added with ID: $rowId")
+
+        if (rowId == -1L) {
+            Log.e("DatabaseError", "Failed to add sample user")
+        } else {
+            Log.d("DatabaseInit", "Sample user added with ID: $rowId")
+        }
+
+        return if (rowId != -1L) rowId.toInt() else null
+    }
+
+    fun initializeDataIfNeeded() {
+        val db = writableDatabase
+
+        // Check if data already exists
+        val cursor = db.rawQuery("SELECT COUNT(*) FROM $TABLE_USERS", null)
+        val userCount = if (cursor.moveToFirst()) cursor.getInt(0) else 0
+        cursor.close()
+
+        Log.d("DatabaseInit", "User count in database: $userCount")
+
+        // Add sample user and other default data
+        val sampleUserID = addSampleUser(SampleUser1)
+        addSampleUser(SampleUser2)
+        addSampleUser(SampleUser3)
+        addSampleUser(SampleUser4)
+        addSampleUser(SampleUser5)
+
+        sampleUserID?.let { generateHistoricalData(it, this) }
+
+    }
+
 
 }
 

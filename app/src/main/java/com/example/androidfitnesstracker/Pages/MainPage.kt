@@ -325,9 +325,7 @@ fun MainPage(
             item {
                 EncapsulatedSection(
                     title = "Leaderboard",
-                    onClick = {
-                        navController.navigate("leaderboardPage")
-                    }
+                    onClick = { /* do nothing */  }
                 ) {
                     Column(
                         modifier = Modifier
