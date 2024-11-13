@@ -1,4 +1,3 @@
-// RegistrationPage.kt
 package com.example.androidfitnesstracker.Pages
 
 import androidx.compose.foundation.layout.*
@@ -120,10 +119,16 @@ fun RegistrationPage(
                             password.isBlank() || confirmPassword.isBlank()
                         ) {
                             errorMessage = "All fields are required."
+                        } else if (password.length < 8) {
+                            errorMessage = "Password must be at least 8 characters."
                         } else if (password != confirmPassword) {
                             errorMessage = "Passwords do not match."
                         } else if (!authManager.isEmailValid(email)) {
                             errorMessage = "Invalid email format."
+                        } else if (authManager.isUsernameTaken(username)) {
+                            errorMessage = "Username is already taken."
+                        } else if (authManager.isEmailTaken(email)) {
+                            errorMessage = "Email is already registered."
                         } else {
                             isFirstPage = false
                             errorMessage = null
@@ -237,34 +242,42 @@ fun RegistrationPage(
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
                     onClick = {
-                        isLoading = true // Show loading indicator
+                        // Validate numeric inputs for age, weight, and height
+                        val parsedAge = age.toIntOrNull()
+                        val parsedWeight = weight.toFloatOrNull()
+                        val parsedHeight = height.toFloatOrNull()
 
-                        CoroutineScope(Dispatchers.IO).launch {
-                            try {
-                                // Parse inputs
-                                val parsedAge = age.toIntOrNull() ?: 0
-                                val parsedWeight = weight.toFloatOrNull() ?: 0f
-                                val parsedHeight = height.toFloatOrNull() ?: 0f
+                        if (parsedAge == null || parsedAge <= 0) {
+                            errorMessage = "Age must be a positive numeric value."
+                        } else if (parsedWeight == null || parsedWeight <= 0) {
+                            errorMessage = "Weight must be a positive numeric value."
+                        } else if (parsedHeight == null || parsedHeight <= 0) {
+                            errorMessage = "Height must be a positive numeric value."
+                        } else {
+                            isLoading = true // Show loading indicator
 
-                                onRegister(
-                                    firstName,
-                                    lastName,
-                                    email,
-                                    username,
-                                    password,
-                                    parsedAge,
-                                    parsedWeight,
-                                    gender,
-                                    parsedHeight,
-                                    membershipType
-                                )
-                            } catch (e: Exception) {
-                                withContext(Dispatchers.Main) {
-                                    errorMessage = "Registration failed: ${e.message}"
-                                }
-                            } finally {
-                                withContext(Dispatchers.Main) {
-                                    isLoading = false
+                            CoroutineScope(Dispatchers.IO).launch {
+                                try {
+                                    onRegister(
+                                        firstName,
+                                        lastName,
+                                        email,
+                                        username,
+                                        password,
+                                        parsedAge,
+                                        parsedWeight,
+                                        gender,
+                                        parsedHeight,
+                                        membershipType
+                                    )
+                                } catch (e: Exception) {
+                                    withContext(Dispatchers.Main) {
+                                        errorMessage = "Registration failed: ${e.message}"
+                                    }
+                                } finally {
+                                    withContext(Dispatchers.Main) {
+                                        isLoading = false
+                                    }
                                 }
                             }
                         }
@@ -289,6 +302,7 @@ fun RegistrationPage(
         }
     }
 }
+
 
 
 

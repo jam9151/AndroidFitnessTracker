@@ -53,10 +53,18 @@ class AuthManager(private val dbHelper: UserDatabaseHelper) {
             SignUpResult.FAILURE
         }
     }
+    fun isUsernameTaken(username: String): Boolean {
+        return dbHelper.isUsernameTaken(username)
+    }
+
+    fun isEmailTaken(email: String): Boolean {
+        return dbHelper.isEmailTaken(email)
+    }
 
     fun getEmail(username: String): String? {
         return dbHelper.getEmailByUsername(username)
     }
+
 
 
 }
