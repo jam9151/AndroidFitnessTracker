@@ -5,11 +5,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.navigation.NavType
+import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.androidfitnesstracker.Pages.LeaderboardPage
+import com.example.androidfitnesstracker.Pages.DietPlanPage
 import com.example.androidfitnesstracker.Pages.MainPage
 import com.example.androidfitnesstracker.Pages.MealCreationPage
 import com.example.androidfitnesstracker.Pages.MealDetailScreen
@@ -18,11 +20,13 @@ import com.example.androidfitnesstracker.Pages.MySubscriptionPage
 import com.example.androidfitnesstracker.Pages.StatsPage
 import com.example.androidfitnesstracker.Pages.UpgradePage
 import com.example.androidfitnesstracker.Pages.WorkoutCreationPage
+import com.example.androidfitnesstracker.Pages.*
 import com.example.androidfitnesstracker.User.UserActivityManager
 import com.example.androidfitnesstracker.User.UserDatabaseHelper
 import com.example.androidfitnesstracker.User.UserSessionManager
 import com.example.androidfitnesstracker.Pages.WorkoutDetailScreen
 import com.example.androidfitnesstracker.Pages.WorkoutListScreen
+import com.example.androidfitnesstracker.Workout.DietManager
 import com.example.androidfitnesstracker.ui.theme.AndroidFitnessTrackerTheme
 
 class MainActivity : ComponentActivity() {
@@ -42,6 +46,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             AndroidFitnessTrackerTheme {
                 val navController = rememberNavController()
+                val dietManager = DietManager(this@MainActivity)  // Initialize dietManager
+
+
+                // State to store diet plans
+                var diets by remember { mutableStateOf(dietManager.getDietPlans()) }
+
 
                 // Set up the NavHost with routes
                 NavHost(navController = navController, startDestination = "mainPage") {
@@ -125,6 +135,43 @@ class MainActivity : ComponentActivity() {
                             dbHelper = dbHelper,
                             onSave = {navController.navigate("mealPlan")}
                         )
+                    }
+                    composable("DietPlan") {
+                        DietPlanPage(
+                            navController = navController,
+                            diets = dietManager.getDietPlans(),
+                            onDietClick = { diet ->
+                                navController.navigate("dietDetail/${diet.id}")
+                            },
+                            onDeleteCustomDiet = {   dietId    ->
+                                dietManager.deleteCustomDiet(dietId)
+                                navController.navigate("DietPlan") { launchSingleTop = true }
+                            }
+                        )
+                    }
+
+
+
+
+
+
+                    composable("createCustomDiet") {
+                        CreateCustomDietPage(
+                            navController = navController,
+                            onCreateCustomDiet = { age, targetWeight, workoutType, targetCalories, ingredients ->
+                                // Create custom diet and get its new ID
+                                val newDietId = dietManager.createCustomDiet(age, targetWeight, workoutType, targetCalories, ingredients)
+                                diets = dietManager.getDietPlans() // Refresh the diet list
+
+
+                                // Navigate to the DietPlanPage of the specific custom diet
+                                navController.navigate("dietDetail/$newDietId") { launchSingleTop = true }
+                            }
+                        )
+                    }
+                    composable("dietDetail/{dietId}") { backStackEntry ->
+                        val dietId = backStackEntry.arguments?.getString("dietId")?.toIntOrNull() ?: 0
+                        DietDetailPage(dietId = dietId, navController = navController)
                     }
                 }
             }

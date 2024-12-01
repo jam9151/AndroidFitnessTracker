@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.androidfitnesstracker.ui.theme.DualEncapsulatedSection
 import com.example.androidfitnesstracker.ui.theme.EncapsulatedSection
-import com.example.androidfitnesstracker.Activities.LoginActivity
+import com.example.androidfitnesstracker.Activities.*
 import com.example.androidfitnesstracker.Membership.getRandomAdvertisement
 import com.example.androidfitnesstracker.ui.theme.ProgressBarWithLabel
 import com.example.androidfitnesstracker.R
@@ -40,6 +40,7 @@ import com.example.androidfitnesstracker.User.UserActivityManager
 import com.example.androidfitnesstracker.User.UserDatabaseHelper
 import com.example.androidfitnesstracker.User.UserSessionManager
 import com.example.androidfitnesstracker.Workout.DailySummary
+import com.example.androidfitnesstracker.Workout.*
 import com.example.androidfitnesstracker.ui.theme.gradientBackground
 import java.text.SimpleDateFormat
 import java.util.*
@@ -56,6 +57,7 @@ fun MainPage(
     val firstName = remember { dbHelper.getFirstName(userId) }
     //val userSubscriptionStatus = remember { dbHelper.getSubscriptionStatus(userId) } want this to be dynamically updated
 
+
     val currentDate = remember {
         SimpleDateFormat("EEEE, MMMM d", Locale.getDefault()).format(Date())
     }
@@ -65,7 +67,7 @@ fun MainPage(
     Log.d("SubscriptionCheck", "Subscription Status: ${dbHelper.getSubscriptionStatus(userId)}")
 
     val context = LocalContext.current
-
+    val dietManager = remember { DietManager(context) }
 
     LaunchedEffect(userId) {
         dbHelper.debugLogActivityTimestamps(userId)
@@ -323,22 +325,50 @@ fun MainPage(
             }
 
             item {
-                EncapsulatedSection(
-                    title = "Leaderboard",
-                    onClick = { /* do nothing */  }
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        // Sample leaderboard entries - replace with dynamic content as needed
-                        Text("1. User123 - 1500 points", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        Text("2. Player456 - 1450 points", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        Text("3. Gamer789 - 1400 points", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        // Additional leaderboard entries can be added here
+                val diets = remember { mutableStateOf<List<DietPlan>>(emptyList()) }
+
+                LaunchedEffect(userId) {
+                    if (dbHelper.getSubscriptionStatus(userId) != SubscriptionStatus.FREE) {
+                        diets.value = dietManager.getDietPlans()
                     }
+                }
+
+                if (dbHelper.getSubscriptionStatus(userId) != SubscriptionStatus.FREE) {
+                    DualEncapsulatedSection(
+                        leftSection = {
+                            SquareEncapsulatedSection(
+                                title = "Diet Plans",
+                                onClick = { navController.navigate("DietPlan") }
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    diets.value.take(3).forEach { diet ->
+                                        Text(
+                                            text = "${diet.name} - ${diet.calories} kcal",
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            }
+                        },
+                        rightSection = {
+                            SquareEncapsulatedSection(
+                                title = "Trainers",
+                                onClick = { /* Left blank as it's under development */ }
+                            ) {
+                                Text(
+                                    text = "Coming soon...",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+                    )
                 }
             }
 

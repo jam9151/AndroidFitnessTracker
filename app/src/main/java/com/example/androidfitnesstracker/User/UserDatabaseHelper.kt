@@ -12,6 +12,7 @@ import com.example.androidfitnesstracker.Workout.ExerciseStep
 import com.example.androidfitnesstracker.Membership.MembershipType
 import com.example.androidfitnesstracker.Membership.SubscriptionStatus
 import com.example.androidfitnesstracker.Workout.Workout
+import com.example.androidfitnesstracker.Workout.DietPlan
 import com.example.androidfitnesstracker.Workout.DailySummary
 import com.example.androidfitnesstracker.Meal.defaultMeals
 import com.example.androidfitnesstracker.Workout.defaultExercises
@@ -25,7 +26,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         // Main user table
         private const val DATABASE_NAME = "User.db"
 
-        private const val DATABASE_VERSION = 41
+        private const val DATABASE_VERSION = 43
         private const val TABLE_USERS = "users"
         private const val COLUMN_ID = "id"
         private const val COLUMN_USERNAME = "username"
@@ -90,6 +91,18 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         private const val COLUMN_MEAL_STEP_NUMBER = "step_number"
         private const val COLUMN_MEAL_STEP_DESCRIPTION = "description"
         private const val COLUMN_MEAL_STEP_IMAGE = "image"
+
+        // Diet Plan Table
+        private const val TABLE_DIETS = "Diets"
+        private const val COLUMN_DIET_ID = "dietid"
+        private const val COLUMN_DIET_NAME = "name"
+        private const val COLUMN_DIET_DESCRIPTION = "description"
+        private const val COLUMN_DIET_CALORIES = "calories"
+        private const val COLUMN_DIET_PROTEIN = "protein"
+        private const val COLUMN_DIET_FATS = "fats"
+        private const val COLUMN_DIET_CARBS = "carbs"
+        private const val COLUMN_DIET_INGREDIENTS = "ingredients"
+        private const val COLUMN_DIET_IS_CUSTOM = "isCustom"
 
 
         // Create Singleton instance
@@ -184,6 +197,24 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         """
             db.execSQL(insertGuestUser)
 
+            // Create diets table
+            val createDietTable = """
+            CREATE TABLE IF NOT EXISTS $TABLE_DIETS (
+                $COLUMN_DIET_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COLUMN_DIET_NAME TEXT NOT NULL,
+                $COLUMN_DIET_DESCRIPTION TEXT NOT NULL,
+                $COLUMN_DIET_CALORIES INTEGER NOT NULL,
+                $COLUMN_DIET_PROTEIN REAL NOT NULL,
+                $COLUMN_DIET_FATS REAL NOT NULL,
+                $COLUMN_DIET_CARBS REAL NOT NULL,
+                $COLUMN_DIET_INGREDIENTS TEXT NOT NULL,
+                $COLUMN_DIET_IS_CUSTOM INTEGER DEFAULT 0
+            )
+        """
+            db.execSQL(createDietTable)
+            insertPresetDiets(db)
+
+
             // Create the meals table
             val createMealsTable = """
 CREATE TABLE IF NOT EXISTS $TABLE_MEALS (
@@ -227,6 +258,7 @@ CREATE TABLE IF NOT EXISTS $TABLE_MEAL_STEPS (
         db.execSQL("DROP TABLE IF EXISTS $TABLE_EXERCISE_STEPS")
         db.execSQL("DROP TABLE IF EXISTS $TABLE_MEALS")
         db.execSQL("DROP TABLE IF EXISTS $TABLE_MEAL_STEPS")
+        db.execSQL("DROP TABLE IF EXISTS $TABLE_DIETS")
 
         onCreate(db)  // Recreate with updated schema
     }
@@ -528,26 +560,112 @@ CREATE TABLE IF NOT EXISTS $TABLE_MEAL_STEPS (
         db.update(TABLE_USERS, values, "$COLUMN_ID = ?", arrayOf(userId.toString()))
     }
 
-    // Get Diet
-    fun getDiet(userId: Int): String? {
-        val db = readableDatabase
-        val cursor = db.rawQuery(
-            "SELECT $COLUMN_DIET FROM $TABLE_USERS WHERE $COLUMN_ID = ?",
-            arrayOf(userId.toString())
+    private fun insertPresetDiets(db: SQLiteDatabase) {
+        val presetDiets = listOf(
+            DietPlan(1, "Muscle Gain", "High-protein diet to support muscle growth.", 2800, 150.0, 90.0, 300.0, listOf("Chicken", "Rice", "Broccoli"), false),
+            DietPlan(2, "Weight Loss", "Low-carb diet for weight reduction.", 1500, 120.0, 70.0, 50.0, listOf("Salmon", "Spinach", "Avocado"), false),
+            DietPlan(3, "Balanced Diet", "Balanced diet for maintenance.", 2000, 80.0, 70.0, 250.0, listOf("Chicken", "Sweet Potato", "Kale"), false),
+            DietPlan(4, "Keto Diet", "High-fat, low-carb ketogenic diet.", 1800, 90.0, 140.0, 30.0, listOf("Avocados", "Olive Oil", "Eggs"), false),
+            DietPlan(5, "High-Protein", "Diet with extra protein for lean muscle.", 2200, 180.0, 60.0, 150.0, listOf("Turkey", "Eggs", "Greek Yogurt"), false),
+            DietPlan(6, "Intermittent Fasting", "Periodic fasting to control intake.", 1800, 100.0, 80.0, 180.0, listOf("Vegetables", "Lean Meat", "Berries"), false)
         )
-        val diet =
-            if (cursor.moveToFirst()) cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DIET)) else null
-        cursor.close()
-        return diet
+
+        for (diet in presetDiets) {
+            val values = ContentValues().apply {
+                put(COLUMN_DIET_ID, diet.id)
+                put(COLUMN_DIET_NAME, diet.name)
+                put(COLUMN_DIET_DESCRIPTION, diet.description)
+                put(COLUMN_DIET_CALORIES, diet.calories)
+                put(COLUMN_DIET_PROTEIN, diet.protein)
+                put(COLUMN_DIET_FATS, diet.fats)
+                put(COLUMN_DIET_CARBS, diet.carbs)
+                put(COLUMN_DIET_INGREDIENTS, diet.ingredients.joinToString(","))
+                put("isCustom", if (diet.isCustom) 1 else 0)
+            }
+            db.insertWithOnConflict(TABLE_DIETS, null, values, SQLiteDatabase.CONFLICT_REPLACE)
+        }
+
+        // Ensure auto-increment starts after pre-set IDs
+        db.execSQL("INSERT OR REPLACE INTO sqlite_sequence (name, seq) VALUES ('$TABLE_DIETS', 6)")
     }
 
-    // Set Diet
-    fun setDiet(userId: Int, diet: String?) {
+    // Fetch a diet by ID
+    fun getDietById(dietId: Int): DietPlan? {
+        val db = readableDatabase
+        val cursor = db.query(
+            TABLE_DIETS,
+            null,
+            "$COLUMN_DIET_ID = ?",
+            arrayOf(dietId.toString()),
+            null, null, null
+        )
+        return cursor.use {
+            if (it.moveToFirst()) {
+                DietPlan(
+                    id = it.getInt(it.getColumnIndexOrThrow(COLUMN_DIET_ID)),
+                    name = it.getString(it.getColumnIndexOrThrow(COLUMN_DIET_NAME)),
+                    description = it.getString(it.getColumnIndexOrThrow(COLUMN_DIET_DESCRIPTION)),
+                    calories = it.getInt(it.getColumnIndexOrThrow(COLUMN_DIET_CALORIES)),
+                    protein = it.getDouble(it.getColumnIndexOrThrow(COLUMN_DIET_PROTEIN)),
+                    fats = it.getDouble(it.getColumnIndexOrThrow(COLUMN_DIET_FATS)),
+                    carbs = it.getDouble(it.getColumnIndexOrThrow(COLUMN_DIET_CARBS)),
+                    ingredients = it.getString(it.getColumnIndexOrThrow(COLUMN_DIET_INGREDIENTS)).split(","),
+                    isCustom = dietId > 6 // Pre-set diets have IDs 1-6
+                )
+            } else null
+        }
+    }
+
+    // Fetch all custom diet plans (IDs > 6)
+    fun getCustomDietPlans(): List<DietPlan> {
+        val customDiets = mutableListOf<DietPlan>()
+        val db = readableDatabase
+        val cursor = db.query(
+            TABLE_DIETS,
+            null,
+            "isCustom = 1",
+            null,
+            null, null, null
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                customDiets.add(
+                    DietPlan(
+                        id = it.getInt(it.getColumnIndexOrThrow(COLUMN_DIET_ID)),
+                        name = it.getString(it.getColumnIndexOrThrow(COLUMN_DIET_NAME)),
+                        description = it.getString(it.getColumnIndexOrThrow(COLUMN_DIET_DESCRIPTION)),
+                        calories = it.getInt(it.getColumnIndexOrThrow(COLUMN_DIET_CALORIES)),
+                        protein = it.getDouble(it.getColumnIndexOrThrow(COLUMN_DIET_PROTEIN)),
+                        fats = it.getDouble(it.getColumnIndexOrThrow(COLUMN_DIET_FATS)),
+                        carbs = it.getDouble(it.getColumnIndexOrThrow(COLUMN_DIET_CARBS)),
+                        ingredients = it.getString(it.getColumnIndexOrThrow(COLUMN_DIET_INGREDIENTS)).split(","),
+                        isCustom = true // Mark these diets as custom
+                    )
+                )
+            }
+        }
+        return customDiets
+    }
+
+    // Insert a custom diet plan
+    fun insertCustomDiet(diet: DietPlan): Long {
         val db = writableDatabase
         val values = ContentValues().apply {
-            put(COLUMN_DIET, diet)
+            put(COLUMN_DIET_NAME, diet.name)
+            put(COLUMN_DIET_DESCRIPTION, diet.description)
+            put(COLUMN_DIET_CALORIES, diet.calories)
+            put(COLUMN_DIET_PROTEIN, diet.protein)
+            put(COLUMN_DIET_FATS, diet.fats)
+            put(COLUMN_DIET_CARBS, diet.carbs)
+            put(COLUMN_DIET_INGREDIENTS, diet.ingredients.joinToString(","))
+            put("isCustom", 1)
         }
-        db.update(TABLE_USERS, values, "$COLUMN_ID = ?", arrayOf(userId.toString()))
+        return db.insert(TABLE_DIETS, null, values)
+    }
+
+    // Delete a custom diet plan
+    fun deleteCustomDiet(dietId: Int) {
+        writableDatabase.delete(TABLE_DIETS, "$COLUMN_DIET_ID = ?", arrayOf(dietId.toString()))
     }
 
     // Get Profile Picture Path
